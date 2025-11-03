@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 공통
 .DS_Store
 Thumbs.db
@@ -19,3 +20,11 @@ python/*.pyc
 python/.env
 
 */.env
+=======
+node_modules
+dist
+.env
+.env.local
+.vscode
+.DS_Store
+>>>>>>> 6048683 (chore: stabilize deps, fix CSS, add auth header, add CI workflow and README)
