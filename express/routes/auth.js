@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import {broadcast} from '../socket/webSocket.js';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ router.post('/api/login', (req, res) => {
   if (username === 'user' && password === 'pass') {
     const user = { name: username };
     const accessToken = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '1h' });
+    broadcast(`${username}님이 로그인했습니다.`);
     return res.json({ accessToken });
   }
 
