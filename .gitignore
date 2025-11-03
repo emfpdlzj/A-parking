@@ -3,6 +3,7 @@
 .DS_Store
 Thumbs.db
 *.log
+.env
 
 # React
 react/node_modules/

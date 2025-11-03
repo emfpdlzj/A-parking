@@ -10,6 +10,5 @@ app.use(express.json());  // JSON body 파싱
 app.use(authRoutes);
 
 app.listen(8080, () => {
-    console.log(process.env.JWT_SECRET);
   console.log('8080 서버 실행 중');
 });
