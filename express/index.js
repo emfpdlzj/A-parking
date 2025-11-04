@@ -1,7 +1,6 @@
 import express from 'express';
 import authRoutes from './routes/auth.js';
 import dotenv from 'dotenv';
-import root from './app.js';
 import {applyCors} from "./configuration/corsConfig.js";
 
 
