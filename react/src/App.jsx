@@ -6,8 +6,8 @@ import ParkingStatusPage from './pages/ParkingStatusPage'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 
 function PrivateRoute({ children }) {
-  const { token } = useAuth()
-  if (!token) return <Navigate to="/login" replace />
+  const { accessToken } = useAuth()
+  if (!accessToken) return <Navigate to="/login" replace />
   return children
 }
 

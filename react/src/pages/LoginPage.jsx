@@ -33,7 +33,7 @@ export default function LoginPage(){
 
   // support backend returning { accessToken, user }
   login(data.accessToken, data.user || { name: id || 'User' })
-      nav('/building-select')
+      nav('/')
     } catch(e){
       setErr('로그인 실패')
     }

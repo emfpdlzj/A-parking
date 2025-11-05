@@ -10,17 +10,18 @@ export function AuthProvider({ children }) {
     } catch(e){ return null }
   })
 
-  const login = (newAccessToken, userData) => { 
+  const login = (newAccessToken, userData) => {
     localStorage.setItem('accessToken', newAccessToken); 
-    setAccessToken(newAccessToken)
-    if(userData)
-      { localStorage.setItem('user', JSON.stringify(userData)); 
-        setUser(userData) }
-        else {
-    localStorage.removeItem('user');
-    setUser(null);
-  }
-  }
+    setAccessToken(newAccessToken);
+
+    if (userData) {
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+    } else {
+        localStorage.removeItem('user');
+        setUser(null);
+    }
+}
   const logout = () => { localStorage.removeItem('accessToken'); localStorage.removeItem('user'); setAccessToken(null); setUser(null) }
 
   return (
