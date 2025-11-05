@@ -38,6 +38,7 @@ router.post('/api/auth/login', (req, res) => {
 // 인증 체크
 router.get('/api/auth/check', verifyToken, (req, res) => {
   res.json({ message: '인증 성공', user: req.user });
+  broadcast(`${req.user.name}님의 인증이 확인되었습니다.`);
 });
 
 export default router;
