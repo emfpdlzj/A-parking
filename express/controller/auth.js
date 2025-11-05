@@ -2,6 +2,7 @@ import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import {broadcast} from '../socket/webSocket.js';
+import { login } from '../service/LoginService.js';
 
 dotenv.config();
 
@@ -22,17 +23,18 @@ function verifyToken(req, res, next) {
 }
 
 // 로그인
-router.post('/api/auth/login', (req, res) => {
+router.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
-
-  if (username === 'user' && password === 'pass') {
-    const user = { name: username };
-    const accessToken = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '15m' });
-    broadcast(`${username}님이 로그인했습니다.`);
-    return res.json({ accessToken, user });
+  try {
+    const member = await login(username,password);
+    const accessToken=jwt.sign(
+        {name:member.name},
+        process.env.JWT_SECRET, {expiresIn:'15m'});
+    return res.json({ accessToken,member });
+  } catch (err) {
+    console.error(err);
+    return res.status(400).json({message : '로그인 실패: ' + err.message});
   }
-
-  res.status(401).json({ message: '인증 실패' });
 });
 
 // 인증 체크
