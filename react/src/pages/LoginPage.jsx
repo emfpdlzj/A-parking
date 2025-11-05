@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { loginApi } from '../api/auth'
 import { useAuth } from '../hooks/useAuth'
@@ -14,8 +14,14 @@ export default function LoginPage(){
   const [id, setId] = useState('')
   const [pw, setPw] = useState('')
   const [err, setErr] = useState('')
-  const { login } = useAuth()
+  const { login, accessToken } = useAuth()
   const nav = useNavigate()
+
+  useEffect(() => { // token을 가지고 있는 경우 바로 로그인
+    if (accessToken) {
+      nav('/')
+    }
+  }, [accessToken, nav])
 
   const loginWithDemo= () => {
     setId(DEMO_ACCOUNT.id)
