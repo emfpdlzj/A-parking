@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState } from 'react'
 
-const AuthContext = createContext()
+const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(localStorage.getItem('token'))
+  const [accessToken, setAccessToken] = useState(localStorage.getItem('accessToken'))
   const [user, setUser] = useState(() => {
     try {
       const raw = localStorage.getItem('user')
@@ -10,12 +10,23 @@ export function AuthProvider({ children }) {
     } catch(e){ return null }
   })
 
-  const login = (t, u) => { 
-    localStorage.setItem('token', t); setToken(t)
-    if(u){ localStorage.setItem('user', JSON.stringify(u)); setUser(u) }
+  const login = (newAccessToken, userData) => { 
+    localStorage.setItem('accessToken', newAccessToken); 
+    setAccessToken(newAccessToken)
+    if(userData)
+      { localStorage.setItem('user', JSON.stringify(userData)); 
+        setUser(userData) }
+        else {
+    localStorage.removeItem('user');
+    setUser(null);
   }
-  const logout = () => { localStorage.removeItem('token'); localStorage.removeItem('user'); setToken(null); setUser(null) }
+  }
+  const logout = () => { localStorage.removeItem('accessToken'); localStorage.removeItem('user'); setAccessToken(null); setUser(null) }
 
-  return <AuthContext.Provider value={{ token, user, login, logout }}>{children}</AuthContext.Provider>
+  return (
+        <AuthContext.Provider value={{ accessToken, user, login, logout, isAuthenticated: !!accessToken }}>
+            {children}
+        </AuthContext.Provider>
+    )
 }
 export const useAuth = () => useContext(AuthContext)

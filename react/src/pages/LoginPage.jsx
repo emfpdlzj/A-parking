@@ -27,9 +27,13 @@ export default function LoginPage(){
     setErr('')
     try{
       const data = await loginApi(id,pw)
-  // support backend returning { token, user }
-  login(data.token, data.user || { name: id || 'User' })
-      nav('/')
+
+      console.log('토큰:', data.accessToken);
+      console.log('사용자 정보:', data.user);
+
+  // support backend returning { accessToken, user }
+  login(data.accessToken, data.user || { name: id || 'User' })
+      nav('/building-select')
     } catch(e){
       setErr('로그인 실패')
     }
