@@ -27,7 +27,7 @@ router.post('/api/auth/login', (req, res) => {
 
   if (username === 'user' && password === 'pass') {
     const user = { name: username };
-    const accessToken = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const accessToken = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '15m' });
     broadcast(`${username}님이 로그인했습니다.`);
     return res.json({ accessToken, user });
   }
