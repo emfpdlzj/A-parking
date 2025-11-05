@@ -22,7 +22,7 @@ function verifyToken(req, res, next) {
 }
 
 // 로그인
-router.post('/api/login', (req, res) => {
+router.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body;
 
   if (username === 'user' && password === 'pass') {

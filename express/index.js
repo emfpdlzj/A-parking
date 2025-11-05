@@ -1,5 +1,5 @@
 import express from 'express';
-import authRoutes from './routes/auth.js';
+import authRoutes from './controller/auth.js';
 import dotenv from 'dotenv';
 import {applyCors} from "./configuration/corsConfig.js";
 

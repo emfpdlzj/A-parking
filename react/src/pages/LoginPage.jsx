@@ -4,6 +4,12 @@ import { loginApi } from '../api/auth'
 import { useAuth } from '../hooks/useAuth'
 import Header from '../components/Header'
 
+const DEMO_ACCOUNT = {
+  id: 'demo',
+  pw: 'demo',
+  user: { name: 'Demo User' }
+}
+
 export default function LoginPage(){
   const [id, setId] = useState('')
   const [pw, setPw] = useState('')
@@ -11,11 +17,16 @@ export default function LoginPage(){
   const { login } = useAuth()
   const nav = useNavigate()
 
+  const loginWithDemo= () => {
+    setId(DEMO_ACCOUNT.id)
+    setPw(DEMO_ACCOUNT.pw)
+  }
+
   async function submit(e){
     e.preventDefault()
     setErr('')
     try{
-  const data = await loginApi(id, pw).catch(()=>({ token: 'demo-token', user: { name: 'Demo User' } }))
+      const data = await loginApi(id,pw)
   // support backend returning { token, user }
   login(data.token, data.user || { name: id || 'User' })
       nav('/')
@@ -34,7 +45,7 @@ export default function LoginPage(){
             <input className="input" placeholder="사용자 ID" value={id} onChange={e=>setId(e.target.value)} />
             <input className="input" placeholder="비밀번호" type="password" value={pw} onChange={e=>setPw(e.target.value)} />
             <button className="btn" type="submit">로그인</button>
-            <button type="button" className="btn" style={{background:'#eef3ff', color:'#2454b8', marginLeft:8}} onClick={()=>{ setId('demo'); setPw('demo') }}>데모 계정</button>
+            <button type="button" className="btn" style={{background:'#eef3ff', color:'#2454b8', marginLeft:8}} onClick={loginWithDemo}>데모 계정</button>
           </form>
           {err && <p className="text-red-600 mt-2">{err}</p>}
         </div>
