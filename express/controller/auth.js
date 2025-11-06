@@ -8,7 +8,7 @@ dotenv.config();
 
 const router = Router();
 
-// JWT 토큰 검증 미들웨어
+// JWT 토큰 검증 미들웨어 , 나중에 service로 옮길 것
 function verifyToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
