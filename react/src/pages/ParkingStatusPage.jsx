@@ -13,6 +13,32 @@ export default function ParkingStatusPage(){
   const [selected, setSelected] = useState(null)
   const [favs, setFavs] = useState(loadFavs())
 
+  useEffect(() => {
+    const token=localStorage.getItem('accessToken')
+    const ws=new WebSocket(`ws://localhost:8081/${buildingId}?token=${token}`)
+
+    ws.onopen= () => {
+      console.log(`${buildingId} 웹소켓 연결`)
+    }
+
+    ws.onmessage = (event) => {
+      const data=JSON.parse(event.data)
+      console.log(`[${buildingId}] 수신된 메시지:`, data)
+    }
+     // 서버로 부터 정보 받으면, 주차장 정보 갱신 코드 구현
+
+     ws.onclose = (e) => {
+      console.log(`[${buildingId}] 웹소켓 연결 종료:`, e.reason)
+     }
+
+     ws.onerror = (err) => {
+      console.error(`[${buildingId}] 웹소켓 에러:`, err.message)
+     }
+      return () => {
+       ws.close()
+      }
+  },[buildingId])
+
   useEffect(()=>{
     async function fetchData(){
       try{
