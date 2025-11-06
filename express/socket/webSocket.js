@@ -17,6 +17,7 @@ wss.on("connection", (ws,req) => { //클라이언트가 연결 시 실행
     }
     try {
         const user=jwt.verify(token, process.env.JWT_SECRET);
+        console.log(token);
         ws.user=user;
         ws.building=building;
         ws.send(JSON.stringify({
