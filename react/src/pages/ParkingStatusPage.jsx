@@ -27,6 +27,15 @@ export default function ParkingStatusPage(){
 
   const token = localStorage.getItem('accessToken')
   const ws = new WebSocket(`ws://localhost:8081/${buildingId}?accessToken=${token}`)
+
+  ws.onopen = () => console.log(`${buildingId} 웹소켓 연결 성공`)
+  ws.onmessage = (event) => {
+    const data=JSON.parse(event.data)
+    console.log(`[${buildingId}] 웹소켓 메시지 수신:`, data)
+  }
+    ws.onclose = () => console.log(`${buildingId} 웹소켓 연결 종료`)
+  ws.onerror = (err) => console.error('WebSocket 에러:', err)
+
 }, [buildingId])
 
   return (
