@@ -13,20 +13,30 @@ export default function ParkingStatusPage(){
   const [selected, setSelected] = useState(null)
   const [favs, setFavs] = useState(loadFavs())
 
-  useEffect(()=>{
-    async function fetchData(){
-      try{
-        const p = await getParking(buildingId).catch(()=>({ slots: demoSlots() }))
-        const a = await getAnalysis(buildingId).catch(()=>({ free: 43, occ: 90 }))
-        setSlots(p.slots || p)
-        setAnalysis(a || { free: '-', occ: '-' })
-      }catch(e){ console.error(e) }
+  useEffect(() => {
+  async function fetchInitial() {
+    try{
+      const res = await getParking(buildingId)
+      setSlots(res.data.slots)
+      console.log('주차장 상태 조회 성공:', res.data.slots)
+    } catch (err) {
+      console.error('주차장 상태 조회 실패:', err)
     }
-    fetchData()
-    function onFav(){ setFavs(loadFavs()) }
-    window.addEventListener('favChange', onFav)
-    return ()=> window.removeEventListener('favChange', onFav)
-  },[buildingId])
+  }
+  fetchInitial()
+
+  const token = localStorage.getItem('accessToken')
+  const ws = new WebSocket(`ws://localhost:8081/${buildingId}?accessToken=${token}`)
+
+  ws.onopen = () => console.log(`${buildingId} 웹소켓 연결 성공`)
+  ws.onmessage = (event) => {
+    const data=JSON.parse(event.data)
+    console.log(`[${buildingId}] 웹소켓 메시지 수신:`, data)
+  }
+    ws.onclose = () => console.log(`${buildingId} 웹소켓 연결 종료`)
+  ws.onerror = (err) => console.error('WebSocket 에러:', err)
+
+}, [buildingId])
 
   return (
     <div className="container mx-auto p-6">
