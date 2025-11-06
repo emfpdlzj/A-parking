@@ -8,7 +8,7 @@ const wss = new WebSocketServer({ port: 8081 }); //WebSocket 연결을 기다리
 
 wss.on("connection", (ws,req) => { //클라이언트가 연결 시 실행
     const url=new URL(req.url, `http://${req.headers.host}`);
-    const token=url.searchParams.get("token");
+    const token=url.searchParams.get("accessToken");
     const building=url.pathname.split("/")[1];
 
     if (!token) {
@@ -18,7 +18,11 @@ wss.on("connection", (ws,req) => { //클라이언트가 연결 시 실행
     try {
         const user=jwt.verify(token, process.env.JWT_SECRET);
         ws.user=user;
-        ws.send(`${building}웹소켓 연결 성공`);
+        ws.building=building;
+        ws.send(JSON.stringify({
+  type: "info",
+  message: `${building} 웹소켓 연결 성공`
+}));
 
     ws.on('message', (msg) => { //클라이언트가 메시지를 보낼때마다 콘솔에 출력
         console.log(`[${building}] 사용자 ${ws.user.name}로부터 메시지: ${msg}`);

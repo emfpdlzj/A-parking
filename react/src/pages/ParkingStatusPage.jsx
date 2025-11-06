@@ -14,45 +14,20 @@ export default function ParkingStatusPage(){
   const [favs, setFavs] = useState(loadFavs())
 
   useEffect(() => {
-    const token=localStorage.getItem('accessToken')
-    const ws=new WebSocket(`ws://localhost:8081/${buildingId}?token=${token}`)
-
-    ws.onopen= () => {
-      console.log(`${buildingId} 웹소켓 연결`)
+  async function fetchInitial() {
+    try{
+      const res = await getParking(buildingId)
+      setSlots(res.data.slots)
+      console.log('주차장 상태 조회 성공:', res.data.slots)
+    } catch (err) {
+      console.error('주차장 상태 조회 실패:', err)
     }
+  }
+  fetchInitial()
 
-    ws.onmessage = (event) => {
-      const data=JSON.parse(event.data)
-      console.log(`[${buildingId}] 수신된 메시지:`, data)
-    }
-     // 서버로 부터 정보 받으면, 주차장 정보 갱신 코드 구현
-
-     ws.onclose = (e) => {
-      console.log(`[${buildingId}] 웹소켓 연결 종료:`, e.reason)
-     }
-
-     ws.onerror = (err) => {
-      console.error(`[${buildingId}] 웹소켓 에러:`, err.message)
-     }
-      return () => {
-       ws.close()
-      }
-  },[buildingId])
-
-  useEffect(()=>{
-    async function fetchData(){
-      try{
-        const p = await getParking(buildingId).catch(()=>({ slots: demoSlots() }))
-        const a = await getAnalysis(buildingId).catch(()=>({ free: 43, occ: 90 }))
-        setSlots(p.slots || p)
-        setAnalysis(a || { free: '-', occ: '-' })
-      }catch(e){ console.error(e) }
-    }
-    fetchData()
-    function onFav(){ setFavs(loadFavs()) }
-    window.addEventListener('favChange', onFav)
-    return ()=> window.removeEventListener('favChange', onFav)
-  },[buildingId])
+  const token = localStorage.getItem('accessToken')
+  const ws = new WebSocket(`ws://localhost:8081/${buildingId}?accessToken=${token}`)
+}, [buildingId])
 
   return (
     <div className="container mx-auto p-6">
