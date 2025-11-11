@@ -3,10 +3,11 @@ import authRoutes from './controller/auth.js';
 import dotenv from 'dotenv';
 import {applyCors} from "./configuration/corsConfig.js";
 import buildingSelector from './controller/BuildingSelector.js';
+import './redis/redisSubscriber.js';
 
+const app = express();
 
 dotenv.config();
-const app = express();
 applyCors(app); //cors 설정 적용
 app.use(express.json());  // JSON body 파싱
 
