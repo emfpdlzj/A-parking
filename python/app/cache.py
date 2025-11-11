@@ -35,7 +35,7 @@ class ROICache:
                 return data
 
     async def load(self, building_id: int, force: bool = False) -> Dict[str, Any]:
-        # 캐시 로드 : 메모리 ->Redis ->Express 순으로 점근 
+        # 캐시 로드 : 메모리 ->Redis ->Express 순으로 점근
         # 메모리에 이미 있으면 바로 리턴
         if not force and building_id in self.memory_cache:
             return self.memory_cache[building_id]
@@ -66,4 +66,5 @@ class ROICache:
 
 
 # FastAPI에서 ROI 불러올 때 호출
+# 메모리에 이미 올라와 있는 ROI를 그냥 읽어오기만 -> 굳이 await 필요 없음.
 roi_cache = ROICache()
