@@ -50,18 +50,18 @@ redis.on("message", (channel, message) => {
     broadcast(buildingId, Object.values(cache[buildingId].slotMap));
 });
 
-setInterval(async () => {
-    for(const buildingId in cache) {
-        const building = cache[buildingId];
-        if(!building.updated) continue; //업데이트된 적 없으면 넘어감
-        try {
-            await saveParkingStatusDB(buildingId, Object.values(building.slotMap)); //DB에 저장
-            building.updated = false; //저장 완료 후 업데이트 플래그 초기화
-        } catch (err) {
-            console.error(`${buildingId} 주차장 상태 DB 저장 실패:`, err);
-        }
-    }
-},60*1000); //1분마다 실행
+// setInterval(async () => {
+//     for(const buildingId in cache) {
+//         const building = cache[buildingId];
+//         if(!building.updated) continue; //업데이트된 적 없으면 넘어감
+//         try {
+//             await saveParkingStatusDB(buildingId, Object.values(building.slotMap)); //DB에 저장
+//             building.updated = false; //저장 완료 후 업데이트 플래그 초기화
+//         } catch (err) {
+//             console.error(`${buildingId} 주차장 상태 DB 저장 실패:`, err);
+//         }
+//     }
+// },60*1000); //1분마다 실행
 
 // initCache(); // 서버 시작 시 캐시 초기화 호출
 export default redis;
