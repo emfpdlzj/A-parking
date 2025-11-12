@@ -33,37 +33,28 @@ export default function WebSocketClientComponent() {
       return;
     }
 
-    // 2. 토큰을 포함하여 연결 URL 생성
-    const connectionUrl = `${WEBSOCKET_URL}?token=${accessToken}`;
-    console.log(`웹소켓 연결 시도: ${connectionUrl}`);
+const protocols = accessToken ? [accessToken] : [];
+ws.current = new WebSocket(WEBSOCKET_URL, protocols);
     
-    // 3. WebSocket 인스턴스 생성
-    ws.current = new WebSocket(connectionUrl);
-    
-    // 4. 이벤트 핸들러 정의
     ws.current.onopen = () => {
       console.log('웹소켓 연결 성공');
       setIsConnected(true);
     };
 
-    // 메시지 수신: 서버에서 보내는 모든 메시지 처리
     ws.current.onmessage = (event) => {
       console.log('서버로부터 메시지 수신:', event.data);
       setReceivedMessages(prev => [...prev, event.data]);
     };
 
-    // 에러 발생
     ws.current.onerror = (error) => {
       console.error('웹소켓 에러 발생:', error);
     };
 
-    // 연결 종료
     ws.current.onclose = (event) => {
       console.log(`웹소켓 연결 종료. 코드: ${event.code}`);
       setIsConnected(false);
     };
 
-    // 5. 클린업 함수: 컴포넌트가 사라지거나 토큰이 변경될 때 연결 해제
     return () => {
       if (ws.current) {
         console.log('컴포넌트 클린업: 웹소켓 연결 닫기');
