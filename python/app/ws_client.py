@@ -1,29 +1,36 @@
-# app/ws_client.py 
-import os, json, asyncio
+# app/ws_client.py
+import os
+import json
 import aioredis
+
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
-# 숫자→문자 building 키 매핑 (임시: 환경변수/상수로 관리)
-BUILDING_KEY = {
-    1: os.getenv("BUILDING_MAP_1", "paldal"),
-    2: os.getenv("BUILDING_MAP_2", "library"),
-    3: os.getenv("BUILDING_MAP_3", "yulgok"),
-    4: os.getenv("BUILDING_MAP_4", "yeonam"),
-}
+
+class RedisPublisher:
+    # Redis 퍼블리셔 클래스 정의
+    def __init__(self) -> None:
+        self.redis = None
+
+    async def connect(self) -> None:
+        # 지연 연결 방식 사용
+        if self.redis is None:
+            self.redis = await aioredis.from_url(
+                REDIS_URL,
+                decode_responses=True,
+            )
+
+    async def publish_packet(self, building_id: int, packet: dict) -> None:
+        # 채널명 패턴 parking-status-{buildingId} 사용
+        channel = f"parking-status-{building_id}"
+        await self.connect()
+        await self.redis.publish(channel, json.dumps(packet))
+
+    async def close(self) -> None:
+        # 연결 종료 함수 정의
+        if self.redis is not None:
+            await self.redis.close()
+            self.redis = None
 
 
-async def publish_slots(building_id_num: int, slots: list[dict]):
-    """
-    slots: [{"id": 12, "occupied": 1}, ...]
-    """
-    bkey = BUILDING_KEY[building_id_num]
-    channel = f"parking-status-{bkey}"
-    payload = {"buildingId": bkey, "slots": slots}
-
-    redis = await aioredis.from_url(REDIS_URL, decode_responses=True)
-    try:
-        await redis.publish(channel, json.dumps(payload))
-        print(f" Redis PUBLISH {channel} -> {len(slots)} slots")
-    finally:
-        await redis.close()
+redis_pub = RedisPublisher()
