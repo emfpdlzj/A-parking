@@ -1,4 +1,5 @@
 # app/diff.py
+from datetime import datetime, timezone
 from typing import Dict, List
 
 
@@ -14,3 +15,27 @@ def calc_diff(
             changed.append({"slot": slot_id, "occupied": occ})
 
     return changed
+
+
+def build_diff_packet(
+    building_id: int,
+    camera_id: int,
+    seq: int,
+    diff_results: List[dict],
+    total_slots: int,
+) -> Dict[str, object]:
+    ts = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    packet = {
+        "type": "occupancy_diff",
+        "buildingId": building_id,
+        "cameraId": camera_id,
+        "ts": ts,
+        "seq": seq,
+        "results": diff_results,
+        "summary": {
+            "changed": len(diff_results),
+            "total": total_slots,
+        },
+    }
+    return packet
