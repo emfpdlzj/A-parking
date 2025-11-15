@@ -1,4 +1,3 @@
-# redis_test.py
 import asyncio
 import json
 import os
