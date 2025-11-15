@@ -73,3 +73,17 @@ def build_packet(
         "results": results,
         "summary": {"changed": len(results), "total": total_slots},
     }
+
+
+# mock 용 ROI 안에 들어있는 slot 리스트 기준으로 랜덤 점유 상태를 만드는 함수
+def make_mock_snapshot(roi_slots: List[dict]) -> Dict[int, int]:
+    # ROI 슬롯 리스트를 받아서 {slot_id: 0 또는 1} 형태로 상태 생성
+    state: Dict[int, int] = {}
+
+    for slot_obj in roi_slots:
+        slot_id = int(slot_obj["slot"])
+        # 예시로 30% 확률로 occupied 설정
+        occupied = 1 if random.random() < 0.3 else 0
+        state[slot_id] = occupied
+
+    return state
