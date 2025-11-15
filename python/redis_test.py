@@ -1,33 +1,36 @@
+# redis_test.py
 import asyncio
 import json
-import aioredis
 import os
+
+import redis.asyncio as redis
+
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 
 async def main():
-    redis = await aioredis.from_url(REDIS_URL, decode_responses=True)
+    r = await redis.from_url(REDIS_URL, decode_responses=True)
 
-    # Express 팀이 구독 중인 채널명
     channel = "parking-status-1"
 
-    # 테스트용 메시지
     message = {
         "type": "occupancy_diff",
         "buildingId": 1,
         "cameraId": 2,
-        "ts": "2025-11-12T15:00:00Z",
+        "ts": "2025-10-14T12:30:10Z",
         "seq": 1,
-        "results": [{"slot": 12, "occupied": 1}, {"slot": 13, "occupied": 0}],
+        "results": [
+            {"slot": 12, "occupied": 1},
+            {"slot": 13, "occupied": 0},
+        ],
         "summary": {"changed": 2, "total": 100},
     }
 
-    # Redis publish
-    await redis.publish(channel, json.dumps(message))
-    print(f"Published to {channel}")
+    await r.publish(channel, json.dumps(message))
+    print("published test message")
 
-    await redis.close()
+    await r.close()
 
 
 if __name__ == "__main__":
