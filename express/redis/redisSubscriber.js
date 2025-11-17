@@ -33,9 +33,14 @@ redis.on("message", (channel, message) => {
     if(!cache[buildingId]){
         cache[buildingId]={buildingId,slotMap:{},updated:false};
     }
+
+    const slots=data.results.map(r=> ({ // redis 메시지 변경
+        id:r.slot,
+        occupied:r.occupied
+    }));
     
     let changed=false;
-    data.slots.forEach(slot => {
+    slots.forEach(slot => {
         const existing=cache[buildingId].slotMap[slot.id];
         if(!existing || existing.occupied !== slot.occupied){
             cache[buildingId].slotMap[slot.id]=slot;
@@ -46,7 +51,7 @@ redis.on("message", (channel, message) => {
         cache[buildingId].updated=true;
     }
 
-    //buildingID에 해당하는 클라이언트들에게 웹소켓으로 방송 (전체 상태 전송)
+    //buildingID에 해당하는 클라이언트들에게 웹소켓으로 방송 => 변화가 있을 때만 전송(전체 상태 전송)
     broadcast(buildingId, Object.values(cache[buildingId].slotMap));
 });
 
