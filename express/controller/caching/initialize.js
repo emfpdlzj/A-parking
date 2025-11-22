@@ -1,5 +1,5 @@
 import express from "express";
-import { getPolygonsForBuilding } from "../../repository/polygon/PolygonRepository.js";
+import { getPolygonsForBuilding } from "../../repository/redis/PolygonRepository.js";
 const app=express();
 app.get("/api/buildings/:buildingId/slots/polygons",async (req,res) => {
     try{
