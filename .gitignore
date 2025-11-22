@@ -19,3 +19,4 @@ python/__pycache__/
 python/*.pyc
 python/.env
 
+*/.env
