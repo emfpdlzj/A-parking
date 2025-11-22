@@ -1,4 +1,4 @@
-import pool from '../configuration/db.js';
+import pool from '../../configuration/db.js';
 
 export async function findMemberByID(member_id) {
     const query = 'SELECT * FROM members WHERE member_id =?';

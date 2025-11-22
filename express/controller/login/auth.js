@@ -1,8 +1,7 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import {broadcast} from '../socket/webSocket.js';
-import { login } from '../service/LoginService.js';
+import { login } from '../../service/LoginService.js';
 
 dotenv.config();
 
@@ -40,7 +39,6 @@ router.post('/api/auth/login', async (req, res) => {
 // 인증 체크
 router.get('/api/auth/check', verifyToken, (req, res) => {
   res.json({ message: '인증 성공', user: req.user });
-  broadcast(`${req.user.name}님의 인증이 확인되었습니다.`);
 });
 
 export default router;

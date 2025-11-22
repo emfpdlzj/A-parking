@@ -33,10 +33,6 @@ export default function LoginPage(){
     setErr('')
     try{
       const data = await loginApi(id,pw)
-
-      console.log('토큰:', data.accessToken);
-      console.log('사용자 정보:', data.user);
-
   // support backend returning { accessToken, user }
   login(data.accessToken, data.user || { name: id || 'User' })
       nav('/')
