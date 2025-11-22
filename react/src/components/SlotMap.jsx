@@ -7,11 +7,12 @@ export default function SlotMap({ slots = [], onSelect = () => {} }) {
         <div className="flex flex-wrap gap-1">
           {slots.map(slot => (
             <div
-              key={slot.slot} // slot.id가 아니라 slot.slot
-              className={`w-8 h-8 ${slot.occupied ? 'bg-gray-400' : 'bg-blue-200'} border border-gray-300 m-0.5 flex items-center justify-center text-xs cursor-pointer`}
+              key={slot.id}                 
+              className={`w-8 h-8 ${slot.occupied ? 'bg-gray-400' : 'bg-blue-200'} 
+                border border-gray-300 m-0.5 flex items-center justify-center text-xs cursor-pointer`}
               onClick={() => onSelect(slot)}
             >
-              {slot.slot} {/* 표시되는 번호도 slot.slot */}
+              {slot.id}                   
             </div>
           ))}
         </div>

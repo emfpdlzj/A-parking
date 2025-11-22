@@ -44,7 +44,6 @@ export function broadcast(building, message) { //모든 연결된 클라이언�
                 data: message,
             }));
         }
-        console.log(`[${building}] 브로드캐스트 메시지: ${message}`);
     });
 }
 

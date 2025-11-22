@@ -5,7 +5,7 @@ export async function getLatestParkingStatus(buildingId) {
     try{
         const [rows] = await pool.query(query,[buildingId]);
         if(!rows.length) return { buildingId, slots: [] };
-        const slots = rows.map(row => ({ slot: row.slot_number, occupied: row.occupied }));
+        const slots = rows.map(row => ({ id: row.slot_number, occupied: row.occupied === 1 }));
         return {
             buildingId,
             slots

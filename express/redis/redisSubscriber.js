@@ -11,7 +11,7 @@ async function initCache() {
             const status= await getLatestParkingStatus(buildingId); //db에서 최신 상태 조회
             cache[buildingId]={
                 buildingId : status.buildingId,
-                slotMap : Object.fromEntries(status.slots.map(slot => [slot.slot,slot.occupied])), //부분 업데이트 관리 하기 편하게 slotmap사용
+                slotMap : Object.fromEntries(status.slots.map(slot => [slot.id, {id: slot.id, occupied: slot.occupied}])), //부분 업데이트 관리 하기 편하게 slotmap사용
                 updated : false
             }
         } catch (err) {
@@ -33,11 +33,10 @@ redis.on("message", (channel, message) => {
     if(!cache[buildingId]){
         cache[buildingId]={buildingId,slotMap:{},updated:false};
     }
-
-    const slots=data.results.map(r=> ({ // redis 메시지 변경
-        id:r.slot,
-        occupied:r.occupied
-    }));
+    const slots = data.results.map(r => ({ 
+    id: r.id,
+    occupied: r.occupied
+}));
     
     let changed=false;
     slots.forEach(slot => {
@@ -50,7 +49,7 @@ redis.on("message", (channel, message) => {
     if(changed){
         cache[buildingId].updated=true;
     }
-
+    
     //buildingID에 해당하는 클라이언트들에게 웹소켓으로 방송 => 변화가 있을 때만 전송(전체 상태 전송)
     broadcast(buildingId, Object.values(cache[buildingId].slotMap));
 });

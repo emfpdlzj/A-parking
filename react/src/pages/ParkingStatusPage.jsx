@@ -24,16 +24,23 @@ const ws = new WebSocket(`ws://localhost:8081/${buildingId}`, [token]);
     try {
       const msg=JSON.parse(event.data);
       if(msg.type==="init") {
-        setSlots(msg.data.slots);
+        const normalized = msg.data.slots.map(s => ({
+        ...s,
+        occupied: s.occupied === 1 || s.occupied === true
+      }));
+        setSlots(normalized);
       } else if(msg.type==="update") {
-        setSlots(msg.data);
+        const normalized = msg.data.map(s => ({
+        ...s,
+        occupied: s.occupied === 1 || s.occupied === true
+      }));
+        setSlots(normalized);
       }
     } catch (error) {
       console.error('웹소켓 메시지 처리 오류:', error);
     }
   }
   ws.onerror = (err) => console.error('WebSocket 에러:', err)
-    ws.onclose = () => console.log(`${buildingId} 웹소켓 연결 종료`)
 
 }, [buildingId])
 
