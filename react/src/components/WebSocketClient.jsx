@@ -12,16 +12,6 @@ export default function WebSocketClientComponent() {
   const [receivedMessages, setReceivedMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   
-  // 메시지 전송 함수
-  const sendMessage = useCallback(() => {
-    if (ws.current && isConnected) {
-      ws.current.send(inputMessage);
-      setInputMessage(''); // 입력창 초기화
-    } else {
-      console.warn('웹소켓이 연결되지 않았거나 닫혔습니다.');
-    }
-  }, [isConnected, inputMessage]);
-
   useEffect(() => {
     // 1. 토큰이 없으면 연결 시도하지 않고, 기존 연결이 있다면 닫음
     if (!accessToken) {
@@ -42,8 +32,16 @@ ws.current = new WebSocket(WEBSOCKET_URL, protocols);
     };
 
     ws.current.onmessage = (event) => {
-      console.log('서버로부터 메시지 수신:', event.data);
-      setReceivedMessages(prev => [...prev, event.data]);
+      try{
+        const msg=JSON.parse(event.data);
+        if(msg.type=="init") {
+            setReceivedMessages([msg.data]);
+        } else if(msg.type="update") {
+            setReceivedMessages(prev => [...prev, msg.data]);
+        }
+      } catch (error) {
+        console.error('메시지 파싱 오류:', error);
+      }
     };
 
     ws.current.onerror = (error) => {
@@ -62,35 +60,4 @@ ws.current = new WebSocket(WEBSOCKET_URL, protocols);
       }
     };
   }, [accessToken]);
-  
-  return (
-    <div style={{ padding: '20px', border: '1px solid #ccc' }}>
-      <h2>WebSocket 클라이언트</h2>
-      <p>상태: <strong style={{ color: isConnected ? 'green' : 'red' }}>{isConnected ? '연결됨' : '연결 끊김'}</strong></p>
-      
-      {/* 메시지 전송 UI */}
-      <div>
-        <input 
-          type="text" 
-          value={inputMessage} 
-          onChange={(e) => setInputMessage(e.target.value)} 
-          placeholder="메시지를 입력하세요"
-          disabled={!isConnected}
-          style={{ marginRight: '10px' }}
-        />
-        <button onClick={sendMessage} disabled={!isConnected || !inputMessage.trim()}>
-          메시지 전송
-        </button>
-      </div>
-
-      <h4 style={{ marginTop: '20px' }}>수신 메시지 ({receivedMessages.length}개)</h4>
-      <div style={{ maxHeight: '200px', overflowY: 'scroll', border: '1px solid #eee', padding: '10px' }}>
-        {receivedMessages.map((msg, index) => (
-          <p key={index} style={{ margin: '3px 0', fontSize: '14px' }}>
-            [{new Date().toLocaleTimeString()}] {msg}
-          </p>
-        ))}
-      </div>
-    </div>
-  );
 }

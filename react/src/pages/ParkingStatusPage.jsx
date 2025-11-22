@@ -14,28 +14,26 @@ export default function ParkingStatusPage(){
   const [favs, setFavs] = useState(loadFavs())
 
   useEffect(() => {
-  async function fetchInitial() {
-    try{
-      const res = await getParking(buildingId)
-      setSlots(res.data.slots)
-      console.log('주차장 상태 조회 성공:', res.data.slots)
-    } catch (err) {
-      console.error('주차장 상태 조회 실패:', err)
-    }
-  }
-  fetchInitial()
 
  const token = localStorage.getItem('accessToken');
 const ws = new WebSocket(`ws://localhost:8081/${buildingId}`, [token]);
 
+  ws.onopen = () => console.log(`${buildingId} 웹소켓 연결 성공`);
 
-  ws.onopen = () => console.log(`${buildingId} 웹소켓 연결 성공`)
   ws.onmessage = (event) => {
-    const data=JSON.parse(event.data)
-    console.log(`[${buildingId}] 웹소켓 메시지 수신:`, data)
+    try {
+      const msg=JSON.parse(event.data);
+      if(msg.type==="init") {
+        setSlots(msg.data.slots);
+      } else if(msg.type==="update") {
+        setSlots(msg.data);
+      }
+    } catch (error) {
+      console.error('웹소켓 메시지 처리 오류:', error);
+    }
   }
-    ws.onclose = () => console.log(`${buildingId} 웹소켓 연결 종료`)
   ws.onerror = (err) => console.error('WebSocket 에러:', err)
+    ws.onclose = () => console.log(`${buildingId} 웹소켓 연결 종료`)
 
 }, [buildingId])
 
