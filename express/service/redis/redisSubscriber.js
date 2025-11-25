@@ -1,6 +1,7 @@
 import redis from "./redisConfig.js";
 import { broadcast } from "../socket/webSocket.js";
 import { getLatestParkingStatus, saveParkingStatusDB} from "../../repository/redis/RedisRepository.js";
+import { saveStatus } from "../../service/congestion/CongestionService.js";
 
 const buildingIds=["paldal","library","yulgok","yeonam"];
 const cache={};
@@ -66,6 +67,26 @@ setInterval(async () => {
         }
     }
 },60*1000); //1분마다 실행
+
+setInterval(async () => {
+    const now = new Date();
+    const minute = now.getMinutes();
+    // 5분 단위일 때만 저장
+    if (minute % 5 !== 0) return;
+    for (const buildingId in cache) {
+        const building = cache[buildingId];
+        const slotList = Object.values(building.slotMap);
+        const totalSlots = slotList.length;
+        const availableSlots = slotList.filter(s => !s.occupied).length;
+        saveStatus(
+            buildingId,
+            totalSlots,
+            availableSlots,
+            now
+        );
+    }
+    console.log(`혼잡도 저장 완료 at ${now.toISOString()}`);
+}, 60 * 1000); // 1분마다 실행
 
 initCache(); // 서버 시작 시 캐시 초기화 호출
 export default redis;
