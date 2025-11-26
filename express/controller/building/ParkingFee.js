@@ -1,6 +1,7 @@
 import express from "express";
 import {verifyToken} from "../login/auth.js";
 import { saveParkingStatus } from "../../service/parkingfee/ParkingFeeService.js";
+import { getParkingFeePreview } from "../../service/parkingfee/ParkingFeeService.js";
 
 const app=express();
 app.use(express.json());
@@ -19,6 +20,8 @@ app.post(`/api/parking/enter`, verifyToken, async (req, res) => {
 
 app.get(`/api/parking/fee/preview`, verifyToken, async (req, res) => {
     const userName=req.userName;
+    const preview = await getParkingFeePreview(userName);
+    res.status(200).json(preview);
 });
 
 export default app;
