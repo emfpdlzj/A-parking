@@ -25,7 +25,7 @@ export async function saveStatus(car_number) {
 
 export async function getEntryTime(car_number) {
     const sql = `
-        SELECT entry_time
+        SELECT entry_time, car_id
         FROM parking_status
         WHERE car_number = ? AND paid = false
     `;
@@ -36,5 +36,27 @@ export async function getEntryTime(car_number) {
         .tz('Asia/Seoul')
         .format('YYYY-MM-DD HH:mm:ss');
 
-    return kstTime;
+    return {
+        carId: rows[0].car_id,
+        entryTime: kstTime
+    };
+}
+
+export async function markAsPaid(car_id, exitTime, fee) {
+    const sql= `
+        update parking_status
+        set paid=true, exit_time=?, final_fee=?
+        where car_id=?
+    `;
+    await pool.query(sql, [exitTime, fee, car_id]);
+}
+
+export async function getParkingInfo(car_id) {
+    const sql =`
+        select entry_time, exit_time, final_fee
+        from parking_status
+        where car_id=?
+    `;
+    const [rows] = await pool.query(sql, [car_id]);
+    return rows[0];
 }
