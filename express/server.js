@@ -3,8 +3,9 @@ import authRoutes from './controller/login/auth.js';
 import dotenv from 'dotenv';
 import {applyCors} from "./configuration/corsConfig.js";
 import buildingSelector from './controller/building/BuildingSelector.js';
-import './redis/redisSubscriber.js';
+import './service/redis/redisSubscriber.js';
 import initialize from './controller/caching/initialize.js';
+import ParkingStatus from './controller/building/ParkingFee.js';
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.json());  // JSON body 파싱
 app.use(authRoutes); // 인증 라우트
 app.use(buildingSelector);
 app.use(initialize);
+app.use(ParkingStatus);
 
 app.get('/', (req, res) => {
   res.send('8080 서버 응답');

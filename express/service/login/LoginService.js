@@ -1,4 +1,4 @@
-import { findMemberByName } from '../repository/login/LoginRepository.js';
+import { findMemberByName } from '../../repository/login/LoginRepository.js';
 
 export async function login(name,password) {
     const member=await findMemberByName(name);

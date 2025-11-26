@@ -1,7 +1,7 @@
 import WebSocket, { WebSocketServer } from "ws";
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { getLatestParkingStatus } from "../repository/redis/RedisRepository.js";
+import { getLatestParkingStatus } from "../../repository/redis/RedisRepository.js";
 
 dotenv.config();
 
