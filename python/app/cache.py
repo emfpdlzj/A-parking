@@ -1,8 +1,8 @@
 import os
 import json
-import aiohttp
-import aioredis
 from typing import Dict, Any
+import aiohttp
+import redis.asyncio as redis
 
 # 기본설정
 EXPRESS_API_URL = os.getenv("EXPRESS_API_URL", "http://localhost:8081")
@@ -20,7 +20,7 @@ class ROICache:
     async def connect(self):
         # Redis 연결
         if not self.redis:
-            self.redis = await aioredis.from_url(REDIS_URL, decode_responses=True)
+            self.redis = await redis.from_url(REDIS_URL, decode_responses=True)
             print("ROI cache 위한 Redis 연결")
 
     async def fetch_from_express(self, building_id: int) -> Dict[str, Any]:

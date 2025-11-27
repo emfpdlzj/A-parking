@@ -1,3 +1,4 @@
+#Redis Publisher 코드 
 import os
 import json
 

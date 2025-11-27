@@ -4,7 +4,7 @@ from app.cache import roi_cache
 from app.state import get_last_state, set_last_state
 from app.detect import make_mock_snapshot
 from app.diff import calc_diff, build_diff_packet
-from app.ws_client import redis_pub
+from python.app.redis_pub import redis_pub
 
 
 _seq_map: Dict[int, int] = {}
