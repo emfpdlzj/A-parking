@@ -1,11 +1,9 @@
-#Redis Publisher 코드 
 import os
 import json
 
 import redis.asyncio as redis
 
-
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379") #6379 포트 사용 
 
 
 class RedisPublisher:
@@ -19,8 +17,9 @@ class RedisPublisher:
                 decode_responses=True,
             )
 
-    async def publish_packet(self, building_id: int, packet: dict) -> None:
-        channel = f"parking-status-{building_id}"
+    async def publish_packet(self, building: str, packet: dict) -> None:
+        # 기존 숫자 -> 건물 문자열 기반 채널명 구성 수정 
+        channel = f"parking-status-{building}"
         await self.connect()
         await self.redis.publish(channel, json.dumps(packet))
 
