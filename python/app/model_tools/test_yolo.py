@@ -1,7 +1,7 @@
-# fastapi 연동 전 frame 1장으로 yolo 반환값 테스트 용 코드
+# express 연동 전 frame 1장으로 yolo 반환값 테스트 용 코드
 import argparse
 import cv2
-from app.model_tools.yolo_car_detector import YoloCarDetector
+from yolo_car_detector import YoloCarDetector
 
 
 def draw_boxes(frame, detections):  # 디버깅용: 검출된 bbox를 프레임 위에 그림

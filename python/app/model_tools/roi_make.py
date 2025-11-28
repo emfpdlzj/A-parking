@@ -72,7 +72,7 @@ cv2.setMouseCallback("ROI Selector", draw_roi)
 
 while True:
     cv2.imshow("ROI Selector", image)
-    if cv2.waitKey(1) & 0xFF == ord("q"):
+    if cv2.waitKey(1) & 0xFF == ord("q"):  # q누르면 종료
         break
 
 cv2.destroyAllWindows()
