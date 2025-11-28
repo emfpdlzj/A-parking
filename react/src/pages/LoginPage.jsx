@@ -68,7 +68,7 @@ export default function LoginPage() {
                 </div>
                 <button
                     type="button"
-                    className="px-4 py-1.5 text-sm font-medium rounded-full border border-[#0b57d0] text-[#0b57d0] bg-white"
+                    className="px-4 py-1.5 text-sm font-medium border border-[#174ea6] text-white bg-[#174ea6] hover:bg-[#1450c8] rounded-lg transition"
                 >
                     로그인
                 </button>
@@ -120,7 +120,7 @@ export default function LoginPage() {
                             >
                                 {loading ? '로그인 처리 중' : '로그인'}
                             </button>
-                            
+
                             <button
                                 type="button"
                                 className="w-full rounded-md bg-[#f3f4f6] text-slate-700 text-sm font-medium py-2.5 hover:bg-[#e5e7eb] transition"
