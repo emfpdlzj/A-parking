@@ -11,29 +11,35 @@ _seq_map: Dict[int, int] = {}
 
 
 async def run_once(building: str, camera_id: int, publish: bool = True) -> dict:
-    # ROI 로드
     roi = await roi_cache.load(building)
     slots = roi.get("slots", [])
-    if not slots:
-        raise ValueError("ROI slots 비어있음")
 
-    # 이전 상태 / 현재 상태 생성
-    prev_state = get_last_state(building, camera_id)
-    cur_state = make_mock_snapshot(slots)
+    # 1) 영상 프레임 읽기 (test.mp4엣 읽음)
+    ret, frame = camera_capture.read()
+    if not ret:
+        raise ValueError("프레임 캡처 실패")
 
-    # diff 계산
-    diff_results = calc_diff(prev_state, cur_state)
+    # 2) YOLO 기반 스냅샷 생성
+    from app.detect import make_snapshot_from_yolo
+    from app.main import yolo_detector
 
-    # 상태 업데이트
-    set_last_state(building, camera_id, cur_state)
-
-    # 패킷 생성
-    packet = build_diff_packet(
-        building=building,
-        diff_results=diff_results,
+    cur_state = make_snapshot_from_yolo(
+        frame=frame,
+        roi_slots=slots,
+        yolo_detector=yolo_detector,
     )
 
-    # 변경 있을 때만 redis publish
+    # 3) diff 계산
+    prev_state = get_last_state(building, camera_id)
+    diff_results = calc_diff(prev_state, cur_state)
+
+    # 4) 패킷 생성
+    packet = build_diff_packet(building=building, diff_results=diff_results)
+
+    # 5) 상태 저장
+    set_last_state(building, camera_id, cur_state)
+
+    # 6) Redis 전송
     if publish and diff_results:
         await redis_pub.publish_packet(building, packet)
 
