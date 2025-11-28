@@ -23,9 +23,7 @@ print("YOLO 모델 로딩 성공 \n")
 # paldal 카메라 1 (1~16번 실제 slot)
 async def get_paldal_cam1_real_slots(frame, roi_slots):
     detections = yolo_detector.infer_frame(frame)
-    print(
-        "YOLO detection 개수 : %d \n", len(detections)
-    )  # 디버깅에 생성형 ai 일부 사용
+    print("YOLO detection 개수 : {len(detections)} \n")  # 디버깅에 생성형 ai 일부 사용
 
     slot_state = {slot["id"]: 0 for slot in roi_slots}
 
