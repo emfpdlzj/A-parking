@@ -5,7 +5,7 @@ import aiohttp
 import redis.asyncio as redis
 
 # 기본설정
-EXPRESS_API_URL = os.getenv("EXPRESS_API_URL", "http://localhost:8081")
+EXPRESS_API_URL = os.getenv("EXPRESS_API_URL", "http://localhost:8080")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 # Redis key 패턴: roi:building:{key}
