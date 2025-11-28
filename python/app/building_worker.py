@@ -42,7 +42,7 @@ async def process_paldal_building():
 
     roi = await roi_cache.load("paldal")
     cam1_slots = roi["slots"][:16]  # paldal cam1 슬롯
-    cap = cv2.VideoCapture("paldal1.mp4")  
+    cap = cv2.VideoCapture("paldal1.mp4")
 
     while True:
         ret, frame = cap.read()
@@ -65,8 +65,12 @@ async def process_paldal_building():
                 diff.append({"id": slot_id, "occupied": bool(occ)})
 
         if diff:
-            packet = {"buildingId": "paldal", "slots": diff}
-            await redis_pub.publish_packet("paldal", packet)
+            packet = {
+                "buildingId": "paldal",
+                "results": diff,
+            }
+
+        await redis_pub.publish_packet("paldal", packet)
 
         set_building_state("paldal", new_state)
 
@@ -88,12 +92,12 @@ async def process_mock_building(building: str):
                 diff.append({"id": slot_id, "occupied": bool(occ)})
 
         if diff:
-            packet = {"buildingId": building, "slots": diff}
+            packet = {"buildingId": building, "results": diff}
             await redis_pub.publish_packet(building, packet)
 
         set_building_state(building, new_state)
 
-        await asyncio.sleep(1)
+        await asyncio.sleep(1)  # TTL 1초
 
 
 # 모든 건물 워커 시작
