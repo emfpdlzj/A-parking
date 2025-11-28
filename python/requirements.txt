@@ -1,6 +1,22 @@
+# FastAPI 기본
 fastapi==0.110.0
 uvicorn[standard]==0.30.1
+
+# 데이터 모델링
 pydantic==2.7.1
-websockets==12.0
-redis
-python-dotenv==1.0.1s
+
+# Redis
+redis==5.0.4
+
+# 환경변수 관리
+python-dotenv==1.0.1
+
+# YOLO 
+ultralytics==8.1.0
+numpy==1.26.4
+
+# 영상 처리 
+opencv-python==4.9.0.80
+
+# HTTP 
+aiohttp==3.9.5
