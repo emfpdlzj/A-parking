@@ -18,6 +18,7 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from 'recharts'
+import { loadFavorites } from '../utils/favStorage'
 
 import paldalImg from '../assets/buildings/paldal.svg'
 import libraryImg from '../assets/buildings/library.svg'
@@ -37,6 +38,7 @@ export default function BuildingSelectPage() {
     const [analysisBuilding, setAnalysisBuilding] = useState('paldal')
     const [analysisData, setAnalysisData] = useState([])
     const [analysisError, setAnalysisError] = useState('')
+    const [favList, setFavList] = useState(() => loadFavorites())
     const navigate = useNavigate()
     // 내 주차 현황 패널 상태
     const [parkingInfo, setParkingInfo] = useState(null) // preview 응답 데이터
@@ -171,7 +173,10 @@ export default function BuildingSelectPage() {
     const handleSelectBuilding = (buildingId) => {
         navigate(`/parking/${buildingId}`)
     }
-
+    // 페이지 진입 시 즐겨찾기 다시 로드
+    useEffect(() => {
+        setFavList(loadFavorites())
+    }, [])
     return (
         <div className="min-h-screen flex flex-col bg-[#f5f7fb]">
             <Header />
@@ -399,20 +404,53 @@ export default function BuildingSelectPage() {
                             <h3 className="text-sm font-semibold text-slate-800 mb-3">
                                 내 선호 자리
                             </h3>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-2">
-                                    <span>팔달관 23번</span>
-                                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#e6f4ea] text-[#137333]">
-                    비어있음
-                  </span>
+
+                            {favList.length === 0 ? (
+                                <p className="text-sm text-slate-500">
+                                    즐겨찾기한 좌석이 없음
+                                </p>
+                            ) : (
+                                <div className="space-y-2 text-sm">
+                                    {favList.map((f) => {
+                                        const b = BUILDINGS.find(
+                                            (b) => b.id === f.buildingId,
+                                        )
+                                        const label = b
+                                            ? `${b.name} ${f.slotId}번`
+                                            : `${f.buildingId} ${f.slotId}번`
+
+                                        let badgeClass =
+                                            'text-xs px-2 py-0.5 rounded-full'
+                                        let badgeText = '정보 없음'
+
+                                        if (f.lastOccupied === 1) {
+                                            badgeClass +=
+                                                ' bg-[#fce8e6] text-[#c5221f]'
+                                            badgeText = '사용 중'
+                                        } else if (f.lastOccupied === 0) {
+                                            badgeClass +=
+                                                ' bg-[#e6f4ea] text-[#137333]'
+                                            badgeText = '비어있음'
+                                        } else {
+                                            badgeClass +=
+                                                ' bg-[#e5e7eb] text-[#4b5563]'
+                                        }
+
+                                        return (
+                                            <div
+                                                key={`${f.buildingId}-${f.slotId}`}
+                                                className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-2"
+                                            >
+                                                <span>{label}</span>
+                                                <span className={badgeClass}>
+                          {badgeText}
+                        </span>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
-                                <div className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-2">
-                                    <span>도서관 45번</span>
-                                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#fce8e6] text-[#c5221f]">
-                    사용 중
-                  </span>
-                                </div>
-                            </div>
+                            )}
+
                             <button
                                 type="button"
                                 className="mt-3 w-full rounded-lg border border-dashed border-slate-300 py-2 text-sm text-slate-500 hover:bg-[#f9fafb] transition"
