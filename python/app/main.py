@@ -2,10 +2,11 @@
 import os
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-
 from app.service import run_once
+from app.model_tools.yolo_car_detector import YoloCarDetector
 
-
+# yolo 초기화 코드
+yolo_detector = None
 app = FastAPI()
 
 # CORS 설정
@@ -16,6 +17,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+async def startup_event():
+    global yolo_detector
+    yolo_detector = YoloCarDetector(model_path="yolo11n.pt")
 
 
 @app.get("/infer")
