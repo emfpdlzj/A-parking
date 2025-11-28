@@ -4,7 +4,7 @@ from typing import List, Dict
 
 # 설정
 BUILDING_ID = "paldal"  # 건물 id 문자열 - paldal, library, yulgok, yeonam
-FRAME_PATH = "frame.jpg"  # ROI를 지정할 이미지 경로
+FRAME_PATH = "paldal_frame.jpg"  # ROI를 지정할 이미지 경로
 OUTPUT_PATH = "roi_paldal_cam1.json"  # 출력 roi json 경로
 
 rois: List[Dict] = []
