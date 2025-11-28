@@ -1,3 +1,4 @@
+import os
 import asyncio
 import numpy as np
 import cv2
@@ -9,13 +10,22 @@ from app.state import get_building_state, set_building_state
 from app.model_tools.yolo_car_detector import YoloCarDetector
 from app.detect import point_in_polygon
 
+# 영상 파일 경로 상수
+BASE_DIR = os.path.dirname(__file__)
+PALDAL_VIDEO_PATH = os.path.join(BASE_DIR, "paldal1.mp4")
+
 # YOLO 모델 전역 로드
+print("YOLO 모델 로딩 시작 \n")
 yolo_detector = YoloCarDetector("yolo11n.pt")
+print("YOLO 모델 로딩 성공 \n")
 
 
 # paldal 카메라 1 (1~16번 실제 slot)
 async def get_paldal_cam1_real_slots(frame, roi_slots):
     detections = yolo_detector.infer_frame(frame)
+    print(
+        "YOLO detection 개수 : %d \n", len(detections)
+    )  # 디버깅에 생성형 ai 일부 사용
 
     slot_state = {slot["id"]: 0 for slot in roi_slots}
 
@@ -38,16 +48,20 @@ async def get_paldal_cam2_mock_slots():
 
 # 카메라 2대 -> paldal 전체(1~70) 병합
 async def process_paldal_building():
-    print("[PALDAL] streaming start")
+    print("paldal.mp4 streaming start")
 
     roi = await roi_cache.load("paldal")
     cam1_slots = roi["slots"][:16]  # paldal cam1 슬롯
-    cap = cv2.VideoCapture("paldal1.mp4")
+    cap = cv2.VideoCapture(PALDAL_VIDEO_PATH)
+
+    if not cap.isOpened():
+        print(f"paldal 영상 열기 실패 경로: {PALDAL_VIDEO_PATH}")
+        return
 
     while True:
         ret, frame = cap.read()
         if not ret:
-            print("[PALDAL] video end")
+            print("paldal video end")
             break
 
         frame_np = np.asarray(frame)
@@ -93,6 +107,7 @@ async def process_mock_building(building: str):
 
         if diff:
             packet = {"buildingId": building, "results": diff}
+            print(f"[MOCK {building}] Redis publish 예정. diff 첫 항목: {diff[0]}")
             await redis_pub.publish_packet(building, packet)
 
         set_building_state(building, new_state)
@@ -102,6 +117,7 @@ async def process_mock_building(building: str):
 
 # 모든 건물 워커 시작
 async def start_all_building_workers():
+    print("모든 건물 스트림 시작")
     asyncio.create_task(process_paldal_building())
 
     for b in ["library", "yulgok", "yeonam"]:
