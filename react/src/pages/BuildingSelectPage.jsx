@@ -2,7 +2,13 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
-import { getParkingSummary, getAnalysis } from '../api/parking'
+import {
+    getParkingSummary,
+    getAnalysis,
+    enterParking,
+    previewParkingFee,
+    settleParkingFee,
+} from '../api/parking'
 import {
     LineChart,
     Line,
@@ -32,7 +38,91 @@ export default function BuildingSelectPage() {
     const [analysisData, setAnalysisData] = useState([])
     const [analysisError, setAnalysisError] = useState('')
     const navigate = useNavigate()
+    // 내 주차 현황 패널 상태
+    const [parkingInfo, setParkingInfo] = useState(null) // preview 응답 데이터
+    const [parkingStatusText, setParkingStatusText] = useState('주차 정보 확인 중')
+    const [parkingLoading, setParkingLoading] = useState(false)
+    const [parkingError, setParkingError] = useState('')
+    const [lastUpdated, setLastUpdated] = useState(null)
 
+    const isParked = !!parkingInfo
+
+    const formatDuration = (minutes) => {
+        if (minutes == null) return '-'
+        const h = Math.floor(minutes / 60)
+        const m = minutes % 60
+        if (h > 0 && m > 0) return `${h}시간 ${m}분`
+        if (h > 0) return `${h}시간`
+        return `${m}분`
+    }
+
+    const formatTime = (date) => {
+        if (!date) return ''
+        const d = typeof date === 'string' ? new Date(date) : date
+        const hh = String(d.getHours()).padStart(2, '0')
+        const mm = String(d.getMinutes()).padStart(2, '0')
+        return `${hh}:${mm}`
+    }
+
+    const fetchPreview = async () => {
+        setParkingLoading(true)
+        setParkingError('')
+        try {
+            const data = await previewParkingFee()
+            setParkingInfo({
+                carNumber: data.carNumber,
+                expectFee: data.expect_fee,
+                durationMinutes: data.duration_minutes,
+            })
+            setParkingStatusText('주차 중')
+            setLastUpdated(new Date())
+        } catch (err) {
+            if (err.response && err.response.status === 404) {
+                setParkingInfo(null)
+                setParkingStatusText('주차 정보 없음')
+            } else {
+                setParkingError('주차 요금 정보를 불러올 수 없음')
+            }
+        } finally {
+            setParkingLoading(false)
+        }
+    }
+
+    const handleEnterClick = async () => {
+        setParkingLoading(true)
+        setParkingError('')
+        try {
+            await enterParking()
+            await fetchPreview()
+        } catch {
+            setParkingError('입차 처리 중 오류 발생')
+        } finally {
+            setParkingLoading(false)
+        }
+    }
+
+    const handleSettleClick = async () => {
+        setParkingLoading(true)
+        setParkingError('')
+        try {
+            await settleParkingFee()
+            setParkingInfo(null)
+            setParkingStatusText('주차 정보 없음')
+            setLastUpdated(new Date())
+        } catch {
+            setParkingError('정산 처리 중 오류 발생')
+        } finally {
+            setParkingLoading(false)
+        }
+    }
+
+    const handlePrimaryParkingClick = async () => {
+        if (isParked) {
+            await handleSettleClick()
+        } else {
+            await handleEnterClick()
+        }
+    }
     useEffect(() => {
         let timerId
 
@@ -75,6 +165,9 @@ export default function BuildingSelectPage() {
         fetchAnalysis()
     }, [analysisBuilding])
 
+    useEffect(() => {
+        fetchPreview()
+    }, [])
     const handleSelectBuilding = (buildingId) => {
         navigate(`/parking/${buildingId}`)
     }
@@ -249,35 +342,57 @@ export default function BuildingSelectPage() {
                                     내 주차 현황
                                 </h3>
                                 <span className="text-xs text-[#174ea6]">
-                  주차 중
+                  {parkingStatusText}
                 </span>
                             </div>
                             <div className="space-y-1 text-sm text-slate-700">
                                 <div className="flex justify-between">
                                     <span>차량 번호</span>
-                                    <span>12가3456</span>
+                                    <span>{parkingInfo?.carNumber ?? '-'}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>주차 시간</span>
-                                    <span>2시간 30분</span>
+                                    <span>{formatDuration(parkingInfo?.durationMinutes)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>예상 요금</span>
-                                    <span>2,500원</span>
+                                    <span>
+                    {parkingInfo
+                        ? `${parkingInfo.expectFee.toLocaleString()}원`
+                        : '-'}
+                  </span>
                                 </div>
                             </div>
                             <button
                                 type="button"
-                                className="mt-4 w-full rounded-lg bg-[#174ea6] py-2 text-sm text-white hover:bg-[#1450c8] transition"
+                                className="mt-4 w-full rounded-lg bg-[#174ea6] py-2 text-sm text-white hover:bg-[#1450c8] transition disabled:bg-slate-400"
+                                onClick={handlePrimaryParkingClick}
+                                disabled={parkingLoading}
                             >
-                                출차하기
+                                {parkingLoading
+                                    ? '처리 중'
+                                    : isParked
+                                        ? '출차하기'
+                                        : '입차하기'}
                             </button>
                             <button
                                 type="button"
-                                className="mt-2 w-full rounded-lg bg-[#f3f4f6] py-2 text-sm text-slate-700 hover:bg-[#e5e7eb] transition"
+                                className="mt-2 w-full rounded-lg bg-[#f3f4f6] py-2 text-sm text-slate-700 hover:bg-[#e5e7eb] transition disabled:bg-slate-300"
+                                onClick={fetchPreview}
+                                disabled={parkingLoading}
                             >
                                 새로고침
                             </button>
+                            {lastUpdated && (
+                                <p className="mt-2 text-[11px] text-slate-400 text-right">
+                                    최근 갱신: {formatTime(lastUpdated)}
+                                </p>
+                            )}
+                            {parkingError && (
+                                <p className="mt-1 text-xs text-red-500">
+                                    {parkingError}
+                                </p>
+                            )}
                         </div>
 
                         <div className="bg-white rounded-2xl shadow-md p-4">
