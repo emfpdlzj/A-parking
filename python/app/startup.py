@@ -1,19 +1,16 @@
+import asyncio
 from app.cache import roi_cache
-from app.model_tools.yolo_car_detector import YoloCarDetector
-from app.stream_worker import start_stream_worker
-from app.state_global import set_yolo_detector
+from app.building_worker import start_all_building_workers
 
 
 async def initialize_all():
-    # 1) ROI 캐싱
+    # 1) ROI 초기 캐싱
+    # 실제로는 paldal만 쓰지만, express맞춰서 4개 건물 모두 한 번씩 캐싱
     for building in ["paldal", "library", "yulgok", "yeonam"]:
         await roi_cache.load(building)
+        print(f"ROI cached for building: {building}")
 
-    # 2) YOLO 모델 로드
-    yolo = YoloCarDetector("yolo11n.pt")
-    set_yolo_detector(yolo)
+    print("캐싱 완료. redis 시작")
 
-    print("모든 초기화 완료. 스트림 작업 시작.")
-
-    # 3) 스트림 자동 시작
-    await start_stream_worker()
+    # 2) 건물별 스트림 워커 시작
+    asyncio.create_task(start_all_building_workers())
