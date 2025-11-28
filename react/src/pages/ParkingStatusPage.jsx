@@ -3,6 +3,10 @@ import React, { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Header from '../components/Header'
 import { useParkingSocket } from '../hooks/useParkingSocket'
+import {
+    getFavoritesByBuilding,
+    toggleFavorite,
+} from '../utils/favStorage'
 
 const BUILDING_NAMES = {
     paldal: '팔달관',
@@ -24,7 +28,9 @@ export default function ParkingStatusPage() {
     const navigate = useNavigate()
     const { slots, connected, error } = useParkingSocket(buildingId)
     const [selectedSlot, setSelectedSlot] = useState(null)
-
+    const [favorites, setFavorites] = useState(
+        () => getFavoritesByBuilding(buildingId) || [],
+    )
     const totalSlots =
         TOTAL_SLOTS_BY_BUILDING[buildingId] ?? 70
 
@@ -37,13 +43,34 @@ export default function ParkingStatusPage() {
                 : 0
         return { occupiedCount: occupied, rate: r }
     }, [slots, totalSlots])
+    React.useEffect(() => {
+        if (!slots || !Object.keys(slots).length) return
 
+        setFavorites((prev) => {
+            const next = prev.map((f) => {
+                const occ = slots[f.slotId]
+                if (occ === 0 || occ === 1) {
+                    return { ...f, lastOccupied: occ }
+                }
+                return f
+            })
+            return next
+        })
+    }, [slots])
     const handleBack = () => {
         navigate(-1)
     }
 
     const handleSelectSlot = (slotId) => {
         setSelectedSlot(slotId)
+    }
+    const handleToggleFavorite = () => {
+        if (!selectedSlot) return
+        const occ = slots[selectedSlot]
+        const updated = toggleFavorite(buildingId, selectedSlot, occ)
+        setFavorites(
+            updated.filter((f) => f.buildingId === buildingId),
+        )
     }
 
     const buildingName =
@@ -175,16 +202,29 @@ export default function ParkingStatusPage() {
                                 선택한 좌석
                             </h3>
                             {selectedSlot ? (
-                                <div className="space-y-1 text-sm text-slate-700">
-                                    <div className="flex justify-between">
-                                        <span>좌석 번호</span>
-                                        <span>{selectedSlot}번</span>
+                                <>
+                                    <div className="space-y-1 text-sm text-slate-700">
+                                        <div className="flex justify-between">
+                                            <span>좌석 번호</span>
+                                            <span>{selectedSlot}번</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span>상태</span>
+                                            <span>{getSlotStateText(selectedSlot)}</span>
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span>상태</span>
-                                        <span>{getSlotStateText(selectedSlot)}</span>
-                                    </div>
-                                </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleToggleFavorite}
+                                        className="mt-3 w-full rounded-lg bg-[#f3f4f6] py-2 text-xs text-slate-700 hover:bg-[#e5e7eb] transition"
+                                    >
+                                        {favorites.some(
+                                            (f) => f.slotId === selectedSlot,
+                                        )
+                                            ? '즐겨찾기 해제'
+                                            : '즐겨찾기 추가'}
+                                    </button>
+                                </>
                             ) : (
                                 <p className="text-sm text-slate-500">
                                     좌석을 선택해 주세요
@@ -196,9 +236,36 @@ export default function ParkingStatusPage() {
                             <h3 className="text-sm font-semibold text-slate-800 mb-2">
                                 내 선호 자리
                             </h3>
-                            <p className="text-sm text-slate-500">
-                                로컬 스토리지 기반 즐겨찾기 연동은 다음 단계에서 구현
-                            </p>
+                            {favorites.length === 0 ? (
+                                <p className="text-sm text-slate-500">
+                                    즐겨찾기한 좌석이 없음
+                                </p>
+                            ) : (
+                                <div className="space-y-2 text-sm">
+                                    {favorites.map((f) => (
+                                        <div
+                                            key={f.slotId}
+                                            className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-2"
+                                        >
+                      <span>
+                        {buildingName} {f.slotId}번
+                      </span>
+                                            <span
+                                                className={[
+                                                    'text-xs px-2 py-0.5 rounded-full',
+                                                    f.lastOccupied === 1
+                                                        ? 'bg-[#fce8e6] text-[#c5221f]'
+                                                        : 'bg-[#e6f4ea] text-[#137333]',
+                                                ].join(' ')}
+                                            >
+                        {f.lastOccupied === 1
+                            ? '사용 중'
+                            : '비어있음'}
+                      </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </aside>
                 </section>
