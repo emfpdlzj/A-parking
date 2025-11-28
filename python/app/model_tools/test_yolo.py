@@ -1,4 +1,5 @@
 # express 연동 전 frame 1장으로 yolo 반환값 테스트 용 코드
+# 유틸메모: python test_yolo.py --image paldal_frame.jpg --show
 import argparse
 import cv2
 from yolo_car_detector import YoloCarDetector
@@ -57,8 +58,8 @@ def main():
     parser.add_argument(
         "--conf",
         type=float,
-        default=0.5,
-        help="Confidence threshold (default: 0.5)",
+        default=0.10,
+        help="Confidence threshold ",
     )
     parser.add_argument(
         "--show",
