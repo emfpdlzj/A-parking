@@ -48,7 +48,22 @@ export default function BuildingSelectPage() {
     const [lastUpdated, setLastUpdated] = useState(null)
 
     const isParked = !!parkingInfo
-
+    const [profile, setProfile] = useState(() => {
+        try {
+            const raw = localStorage.getItem('profile')
+            if (raw) return JSON.parse(raw)
+        } catch {
+            // 무시
+        }
+        return {
+            name: '홍길동',
+            studentId: '202012345',
+            favoriteBuilding: 'paldal',
+            carNumber: '12가3456',
+        }
+    })
+    const [isEditingProfile, setIsEditingProfile] = useState(false)
+    const [editProfile, setEditProfile] = useState(profile)
     const formatDuration = (minutes) => {
         if (minutes == null) return '-'
         const h = Math.floor(minutes / 60)
@@ -124,6 +139,32 @@ export default function BuildingSelectPage() {
         } else {
             await handleEnterClick()
         }
+    }
+    const handleStartEditProfile = () => {
+        setEditProfile(profile)
+        setIsEditingProfile(true)
+    }
+
+    const handleChangeProfileField = (field, value) => {
+        setEditProfile((prev) => ({
+            ...prev,
+            [field]: value,
+        }))
+    }
+
+    const handleSaveProfile = () => {
+        setProfile(editProfile)
+        setIsEditingProfile(false)
+        try {
+            localStorage.setItem('profile', JSON.stringify(editProfile))
+        } catch {
+            // 저장 실패 시 무시
+        }
+    }
+
+    const handleCancelProfile = () => {
+        setIsEditingProfile(false)
+        setEditProfile(profile)
     }
     useEffect(() => {
         let timerId
@@ -314,31 +355,132 @@ export default function BuildingSelectPage() {
                                 <h3 className="text-sm font-semibold text-slate-800">
                                     내 정보
                                 </h3>
+                                {!isEditingProfile && (
+                                    <button
+                                        type="button"
+                                        onClick={handleStartEditProfile}
+                                        className="text-[11px] px-2 py-1 rounded-md bg-[#f3f4f6] text-slate-600 hover:bg-[#e5e7eb] transition"
+                                    >
+                                        수정
+                                    </button>
+                                )}
                             </div>
-                            <div className="space-y-1 text-sm text-slate-700">
-                                <div className="flex justify-between">
-                                    <span>이름</span>
-                                    <span>홍길동</span>
+
+                            {isEditingProfile ? (
+                                <div className="space-y-2 text-sm text-slate-700">
+                                    <div className="flex justify-between items-center gap-4">
+                                        <span className="whitespace-nowrap">
+                                            이름
+                                        </span>
+                                        <input
+                                            type="text"
+                                            value={editProfile.name}
+                                            onChange={(e) =>
+                                                handleChangeProfileField(
+                                                    'name',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-sm"
+                                        />
+                                    </div>
+                                    <div className="flex justify-between items-center gap-4">
+                                        <span className="whitespace-nowrap">
+                                            학번
+                                        </span>
+                                        <input
+                                            type="text"
+                                            value={editProfile.studentId}
+                                            onChange={(e) =>
+                                                handleChangeProfileField(
+                                                    'studentId',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-sm"
+                                        />
+                                    </div>
+                                    <div className="flex justify-between items-center gap-4">
+                                        <span className="whitespace-nowrap">
+                                            즐겨찾는 건물
+                                        </span>
+                                        <select
+                                            value={editProfile.favoriteBuilding}
+                                            onChange={(e) =>
+                                                handleChangeProfileField(
+                                                    'favoriteBuilding',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-sm bg-white"
+                                        >
+                                            {BUILDINGS.map((b) => (
+                                                <option
+                                                    key={b.id}
+                                                    value={b.id}
+                                                >
+                                                    {b.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="flex justify-between items-center gap-4">
+                                        <span className="whitespace-nowrap">
+                                            차량 번호
+                                        </span>
+                                        <input
+                                            type="text"
+                                            value={editProfile.carNumber}
+                                            disabled
+                                            className="flex-1 border border-slate-200 bg-[#f9fafb] text-slate-500 rounded-md px-2 py-1 text-sm cursor-not-allowed"
+                                        />
+                                    </div>
+
+                                    <div className="mt-3 flex gap-2 justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={handleCancelProfile}
+                                            className="px-3 py-1.5 text-xs rounded-md border border-slate-300 text-slate-600 hover:bg-[#f9fafb] transition"
+                                        >
+                                            취소
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleSaveProfile}
+                                            className="px-3 py-1.5 text-xs rounded-md bg-[#174ea6] text-white hover:bg-[#1450c8] transition"
+                                        >
+                                            저장
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span>학번</span>
-                                    <span>202012345</span>
+                            ) : (
+                                <div className="space-y-1 text-sm text-slate-700">
+                                    <div className="flex justify-between">
+                                        <span>이름</span>
+                                        <span>{profile.name}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>학번</span>
+                                        <span>{profile.studentId}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>차량 번호</span>
+                                        <span>{profile.carNumber}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>즐겨찾는 건물</span>
+                                        <span>
+                                            {
+                                                BUILDINGS.find(
+                                                    (b) =>
+                                                        b.id ===
+                                                        profile.favoriteBuilding,
+                                                )?.name
+                                            }
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span>차량 번호</span>
-                                    <span>12가3456</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span>즐겨찾는 건물</span>
-                                    <span>팔달관</span>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                className="mt-4 w-full rounded-lg bg-[#f3f4f6] py-2 text-sm text-slate-700 hover:bg-[#e5e7eb] transition"
-                            >
-                                수정
-                            </button>
+                            )}
                         </div>
 
                         <div className="bg-white rounded-2xl shadow-md p-4">
