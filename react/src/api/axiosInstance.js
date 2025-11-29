@@ -1,27 +1,21 @@
 import axios from 'axios'
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE || '/',
-    timeout: 10000,
+    baseURL: '',
 })
 
+// 모든 요청에 Authorization 자동 추가
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('accessToken')
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`
+    const stored = localStorage.getItem('accessToken')
+
+    if (stored) {
+        // Bearer  형태면 그대로, 아니면 앞에 Bearer 붙이기
+        config.headers.Authorization = stored.startsWith('Bearer ')
+            ? stored
+            : `Bearer ${stored}`
     }
+
     return config
 })
-
-api.interceptors.response.use(
-    (res) => res,
-    (err) => {
-        if (err.response && err.response.status === 401) {
-            localStorage.removeItem('accessToken')
-            window.location.href = '/login'
-        }
-        return Promise.reject(err)
-    },
-)
 
 export default api
