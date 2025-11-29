@@ -14,36 +14,50 @@ export function useParkingSocket(buildingId) {
     useEffect(() => {
         if (!buildingId) return
 
-        // 토큰 없으면 연결 안 함
         if (!accessToken) {
             setError('로그인 필요')
             return
         }
 
-        const protocols = accessToken ? [accessToken] : []
-        const ws = new WebSocket(WS_BASE, protocols)
+        // "Bearer xxx" 형태 -> 뒤에 JWT만 사용
+        const rawToken = accessToken.startsWith('Bearer ')
+            ? accessToken.slice(7)
+            : accessToken
+
+        // building 붙여보냄
+        const wsUrl = `${WS_BASE}/${buildingId}`
+
+        // Subprotocol에 JWT 하나만 실어서 보냄
+        const ws = new WebSocket(wsUrl, rawToken)
         wsRef.current = ws
 
         setError('')
 
         ws.onopen = () => {
-            console.log('웹소켓 연결 성공')
+            console.log('웹소켓 연결 성공', wsUrl)
             setConnected(true)
         }
 
         ws.onmessage = (event) => {
             try {
                 const msg = JSON.parse(event.data)
+                console.log('ws message', msg)
 
-                const list = Array.isArray(msg?.data) ? msg.data : []
+                const list = Array.isArray(msg?.data?.slots)
+                    ? msg.data.slots
+                    : Array.isArray(msg?.data)
+                        ? msg.data
+                        : []
 
                 const map = {}
                 list.forEach((item) => {
                     if (!item) return
-                    const id = Number(item.id)
-                    const occ = Number(item.occupied)
+                    const id = Number(item.id ?? item.slot_number ?? item.slot)
+                    const occ = Number(
+                        item.occupied === true ? 1 : item.occupied
+                    )
                     if (!Number.isNaN(id)) {
-                        map[id] = occ
+                        map[id] = !!occ // true/false로 통일
                     }
                 })
 
@@ -71,7 +85,10 @@ export function useParkingSocket(buildingId) {
         }
 
         return () => {
-            ws.close(1000, '페이지 이동')
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.close(1000, '페이지 이동')
+            }
+            wsRef.current = null
         }
     }, [buildingId, accessToken])
 
