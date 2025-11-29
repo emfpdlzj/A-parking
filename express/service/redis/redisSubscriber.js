@@ -4,7 +4,7 @@ import { getLatestParkingStatus, saveParkingStatusDB} from "../../repository/red
 import { saveStatus } from "../../service/congestion/CongestionService.js";
 
 const buildingIds=["paldal","library","yulgok","yeonam"];
-const cache={};
+export const cache={};
 
 async function initCache() {
     for(const buildingId of buildingIds){

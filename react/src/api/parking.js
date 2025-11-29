@@ -14,7 +14,7 @@ export async function getAnalysis(buildingId) {
 
 // 전체 건물별 요약 점유율 조회
 export async function getParkingSummary() {
-    const res = await api.get('/api/parking-lot/summary')
+    const res = await api.get('/api/parkinglot/summary')
     return res.data
 }
 
