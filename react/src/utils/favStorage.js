@@ -1,50 +1,62 @@
-const KEY = 'ajou_parking_favs_v1'
+// 즐겨찾기 주차 슬롯 저장소
+const KEY = 'favoriteSlots'
 
-// 전체 즐겨찾기 불러옴
-export function loadFavorites() {
+function loadRaw() {
     try {
-        return JSON.parse(localStorage.getItem(KEY) || '[]')
+        const raw = localStorage.getItem(KEY)
+        return raw ? JSON.parse(raw) : []
     } catch {
         return []
     }
 }
 
-// 전체 즐겨찾기 저장
-export function saveFavorites(list) {
-    localStorage.setItem(KEY, JSON.stringify(list))
+function saveRaw(arr) {
+    localStorage.setItem(KEY, JSON.stringify(arr))
 }
 
-// 건물 + 좌석이 같은지 비교
-function sameSlot(a, buildingId, slotId) {
-    return a.buildingId === buildingId && a.slotId === slotId
+// ex:"paldal:23", ID 생성
+export function makeFavId(buildingId, slotId) {
+    return `${buildingId}:${slotId}`
+}
+
+// 전체 즐겨찾기 목록 로드
+export function loadFavs() {
+    return loadRaw()
+}
+
+// 즐겨찾기 저장
+export function saveFavs(list) {
+    saveRaw(list)
 }
 
 // 즐겨찾기 토글
-export function toggleFavorite(buildingId, slotId, occupied = null) {
-    const list = loadFavorites()
-    const idx = list.findIndex((f) => sameSlot(f, buildingId, slotId))
+export function toggleFav(buildingId, slotId) {
+    const id = makeFavId(buildingId, slotId)
+    const list = loadRaw()
+    const idx = list.indexOf(id)
 
     if (idx >= 0) {
         list.splice(idx, 1)
     } else {
-        list.push({
-            buildingId,
-            slotId,
-            lastOccupied: occupied,
-        })
+        list.push(id)
     }
 
-    saveFavorites(list)
+    saveRaw(list)
     return list
 }
 
 // 즐겨찾기 여부 확인
-export function isFavorite(buildingId, slotId) {
-    const list = loadFavorites()
-    return list.some((f) => sameSlot(f, buildingId, slotId))
+export function isFav(buildingId, slotId) {
+    const id = makeFavId(buildingId, slotId)
+    return loadRaw().includes(id)
 }
 
-// 특정 건물 즐겨찾기만 가져오기
-export function getFavoritesByBuilding(buildingId) {
-    return loadFavorites().filter((f) => f.buildingId === buildingId)
+// 특정 건물 즐겨찾기만 필터
+export function getFavsByBuilding(buildingId) {
+    return loadRaw()
+        .filter((id) => id.startsWith(`${buildingId}:`))
+        .map((id) => {
+            const [, slot] = id.split(':')
+            return Number(slot)
+        })
 }
