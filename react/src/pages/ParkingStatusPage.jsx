@@ -3,10 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Header from '../components/Header'
 import { useParkingSocket } from '../hooks/useParkingSocket'
-import {
-    getFavoritesByBuilding,
-    toggleFavorite,
-} from '../utils/favStorage'
+import { getFavsByBuilding, toggleFav } from '../utils/favStorage'
 
 const BUILDING_NAMES = {
     paldal: '팔달관',
@@ -29,8 +26,13 @@ export default function ParkingStatusPage() {
     const { slots, connected, error } = useParkingSocket(buildingId)
     const [selectedSlot, setSelectedSlot] = useState(null)
     const [favorites, setFavorites] = useState(
-        () => getFavoritesByBuilding(buildingId) || [],
+        () => getFavsByBuilding(buildingId) || [],
     )
+    const handleToggleFavoriteForSelected = () => {
+        if (!selectedSlot) return
+        toggleFav(buildingId, selectedSlot)
+        setFavorites(getFavsByBuilding(buildingId))
+    }
     const totalSlots =
         TOTAL_SLOTS_BY_BUILDING[buildingId] ?? 70
 
@@ -43,34 +45,12 @@ export default function ParkingStatusPage() {
                 : 0
         return { occupiedCount: occupied, rate: r }
     }, [slots, totalSlots])
-    React.useEffect(() => {
-        if (!slots || !Object.keys(slots).length) return
-
-        setFavorites((prev) => {
-            const next = prev.map((f) => {
-                const occ = slots[f.slotId]
-                if (occ === 0 || occ === 1) {
-                    return { ...f, lastOccupied: occ }
-                }
-                return f
-            })
-            return next
-        })
-    }, [slots])
     const handleBack = () => {
         navigate(-1)
     }
 
     const handleSelectSlot = (slotId) => {
         setSelectedSlot(slotId)
-    }
-    const handleToggleFavorite = () => {
-        if (!selectedSlot) return
-        const occ = slots[selectedSlot]
-        const updated = toggleFavorite(buildingId, selectedSlot, occ)
-        setFavorites(
-            updated.filter((f) => f.buildingId === buildingId),
-        )
     }
 
     const buildingName =
@@ -215,12 +195,10 @@ export default function ParkingStatusPage() {
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={handleToggleFavorite}
+                                        onClick={handleToggleFavoriteForSelected}
                                         className="mt-3 w-full rounded-lg bg-[#f3f4f6] py-2 text-xs text-slate-700 hover:bg-[#e5e7eb] transition"
                                     >
-                                        {favorites.some(
-                                            (f) => f.slotId === selectedSlot,
-                                        )
+                                        {favorites.includes(selectedSlot)
                                             ? '즐겨찾기 해제'
                                             : '즐겨찾기 추가'}
                                     </button>
@@ -242,28 +220,31 @@ export default function ParkingStatusPage() {
                                 </p>
                             ) : (
                                 <div className="space-y-2 text-sm">
-                                    {favorites.map((f) => (
-                                        <div
-                                            key={f.slotId}
-                                            className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-2"
-                                        >
-                      <span>
-                        {buildingName} {f.slotId}번
-                      </span>
-                                            <span
-                                                className={[
-                                                    'text-xs px-2 py-0.5 rounded-full',
-                                                    f.lastOccupied === 1
-                                                        ? 'bg-[#fce8e6] text-[#c5221f]'
-                                                        : 'bg-[#e6f4ea] text-[#137333]',
-                                                ].join(' ')}
+                                    {favorites.map((slotId) => {
+                                        const occ = slots[slotId]
+                                        const isOccupied = occ === 1
+
+                                        return (
+                                            <div
+                                                key={slotId}
+                                                className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-2"
                                             >
-                        {f.lastOccupied === 1
-                            ? '사용 중'
-                            : '비어있음'}
-                      </span>
-                                        </div>
-                                    ))}
+                                            <span>
+                                                {buildingName} {slotId}번
+                                            </span>
+                                                <span
+                                                    className={[
+                                                        'text-xs px-2 py-0.5 rounded-full',
+                                                        isOccupied
+                                                            ? 'bg-[#fce8e6] text-[#c5221f]'
+                                                            : 'bg-[#e6f4ea] text-[#137333]',
+                                                    ].join(' ')}
+                                                >
+                                                    {isOccupied ? '사용 중' : '비어있음'}
+                                                </span>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                             )}
                         </div>
