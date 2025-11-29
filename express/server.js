@@ -6,6 +6,7 @@ import buildingSelector from './controller/building/BuildingSelector.js';
 import './service/redis/redisSubscriber.js';
 import initialize from './controller/caching/initialize.js';
 import ParkingStatus from './controller/building/ParkingFee.js';
+import { buildingSummaryRouter } from './controller/summary/BuildingSummary.js';
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use(authRoutes); // 인증 라우트
 app.use(buildingSelector);
 app.use(initialize);
 app.use(ParkingStatus);
+app.use(buildingSummaryRouter);
 
 app.get('/', (req, res) => {
   res.send('8080 서버 응답');
