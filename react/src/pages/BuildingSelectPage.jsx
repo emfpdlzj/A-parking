@@ -36,18 +36,21 @@ const BUILDINGS = [
 export default function BuildingSelectPage() {
     const [summary, setSummary] = useState({})
     const [summaryError, setSummaryError] = useState('')
+
     const [analysisBuilding, setAnalysisBuilding] = useState('paldal')
     const [analysisData, setAnalysisData] = useState([])
     const [analysisError, setAnalysisError] = useState('')
-    const [favList, setFavList] = useState(() => loadFavs() || [])
-    const navigate = useNavigate()
+
+    const [favorites, setFavorites] = useState(() => loadFavs())
     // 내 주차 현황 패널 상태
-    const [parkingInfo, setParkingInfo] = useState(null) // preview 응답 데이터
-    const [parkingStatusText, setParkingStatusText] = useState('주차 정보 확인 중')
+    const [parkingInfo, setParkingInfo] = useState(null) // preview / settle 응답 raw 저장
+    const [parkingStatusText, setParkingStatusText] = useState('주차 정보 없음')
     const [parkingLoading, setParkingLoading] = useState(false)
     const [parkingError, setParkingError] = useState('')
     const [lastUpdated, setLastUpdated] = useState(null)
-    const [favorites, setFavorites] = useState(() => loadFavs())
+    const [isSettleStage, setIsSettleStage] = useState(false) // 출차 버튼 누른 뒤 결제 단계 진입 여부
+
+    const navigate = useNavigate()
 
     const isParked = !!parkingInfo
     const [profile, setProfile] = useState(() => {
@@ -216,10 +219,7 @@ export default function BuildingSelectPage() {
     const handleSelectBuilding = (buildingId) => {
         navigate(`/parking/${buildingId}`)
     }
-    // 페이지 진입 시 즐겨찾기 다시 로드
-    useEffect(() => {
-        setFavList(loadFavs())
-    }, [])
+
     const favoriteItems = favorites.map((favId) => {
         const [bId, slotStr] = favId.split(':')
         const slot = Number(slotStr)
@@ -245,6 +245,72 @@ export default function BuildingSelectPage() {
             badgeClass,
         }
     })
+    // 입차하기
+    const handleEnterParking = async () => {
+        try {
+            setParkingLoading(true)
+            setParkingError('')
+            setIsSettleStage(false)
+
+            await enterParking() // 200 OK 만 온다고 가정
+
+            setParkingStatusText('입차 처리 완료')
+            setParkingInfo(null)
+            setLastUpdated(new Date().toISOString())
+        } catch (e) {
+            console.error('enterParking 오류', e)
+            setParkingError('입차 처리 실패')
+        } finally {
+            setParkingLoading(false)
+        }
+    }
+
+    // 예상 요금 확인
+    const handlePreviewFee = async () => {
+        try {
+            setParkingLoading(true)
+            setParkingError('')
+
+            const data = await previewParkingFee()
+            // 예: { carNumber, expect_fee, duration_minutes }
+            setParkingInfo(data)
+            setParkingStatusText('주차 중 (예상 요금 기준)')
+            setLastUpdated(new Date().toISOString())
+        } catch (e) {
+            console.error('previewParkingFee 오류', e)
+            setParkingInfo(null)
+            setParkingStatusText('주차 정보 없음')
+            setParkingError('예상 요금 조회 실패')
+        } finally {
+            setParkingLoading(false)
+        }
+    }
+
+    // 출차 단계 진입 (결제 버튼 띄우기)
+    const handlePrepareSettle = () => {
+        setIsSettleStage(true)
+        setParkingError('')
+    }
+
+    // 최종 정산
+    const handleSettleParking = async () => {
+        try {
+            setParkingLoading(true)
+            setParkingError('')
+
+            const data = await settleParkingFee()
+            // 예: { entry_time, exit_time, final_fee, duration_minutes, paid }
+            setParkingInfo(data)
+            setParkingStatusText('정산 완료')
+            setLastUpdated(new Date().toISOString())
+            setIsSettleStage(false)
+        } catch (e) {
+            console.error('settleParkingFee 오류', e)
+            setParkingError('정산 처리 실패')
+        } finally {
+            setParkingLoading(false)
+        }
+    }
 
     return (
         <div className="min-h-screen flex flex-col bg-[#f5f7fb]">
@@ -511,62 +577,114 @@ export default function BuildingSelectPage() {
                             )}
                         </div>
 
+                        {/* 오른쪽 패널 안의 "내 주차 현황" 카드 */}
                         <div className="bg-white rounded-2xl shadow-md p-4">
                             <div className="flex items-center justify-between mb-3">
                                 <h3 className="text-sm font-semibold text-slate-800">
                                     내 주차 현황
                                 </h3>
                                 <span className="text-xs text-[#174ea6]">
-                  {parkingStatusText}
-                </span>
+      {parkingStatusText}
+    </span>
                             </div>
-                            <div className="space-y-1 text-sm text-slate-700">
-                                <div className="flex justify-between">
-                                    <span>차량 번호</span>
-                                    <span>{parkingInfo?.carNumber ?? '-'}</span>
+
+                            {/* 내용 영역 */}
+                            {parkingLoading ? (
+                                <p className="text-xs text-slate-500">불러오는 중...</p>
+                            ) : parkingError ? (
+                                <p className="text-xs text-red-500">{parkingError}</p>
+                            ) : parkingInfo ? (
+                                <div className="space-y-1 text-sm text-slate-700">
+                                    {/* preview 응답일 수도, settle 응답일 수도 있음 */}
+                                    {'carNumber' in parkingInfo && (
+                                        <div className="flex justify-between">
+                                            <span>차량 번호</span>
+                                            <span>{parkingInfo.carNumber}</span>
+                                        </div>
+                                    )}
+
+                                    <div className="flex justify-between">
+                                        <span>주차 시간</span>
+                                        <span>
+          {parkingInfo.duration_minutes != null
+              ? `${Math.floor(parkingInfo.duration_minutes / 60)}시간 ${
+                  parkingInfo.duration_minutes % 60
+              }분`
+              : '-'}
+        </span>
+                                    </div>
+
+                                    {/* 예상 요금 or 최종 요금 */}
+                                    <div className="flex justify-between">
+                                        <span>{'final_fee' in parkingInfo ? '최종 요금' : '예상 요금'}</span>
+                                        <span>
+          {'final_fee' in parkingInfo
+              ? `${parkingInfo.final_fee.toLocaleString()}원`
+              : parkingInfo.expect_fee != null
+                  ? `${parkingInfo.expect_fee.toLocaleString()}원`
+                  : '-'}
+        </span>
+                                    </div>
+
+                                    {/* 정산 응답에만 있는 정보들 */}
+                                    {'entry_time' in parkingInfo && (
+                                        <div className="flex justify-between">
+                                            <span>입차 시각</span>
+                                            <span>{parkingInfo.entry_time}</span>
+                                        </div>
+                                    )}
+                                    {'exit_time' in parkingInfo && (
+                                        <div className="flex justify-between">
+                                            <span>출차 시각</span>
+                                            <span>{parkingInfo.exit_time}</span>
+                                        </div>
+                                    )}
+
+                                    {lastUpdated && (
+                                        <p className="mt-1 text-[10px] text-slate-400 text-right">
+                                            {new Date(lastUpdated).toLocaleTimeString()} 기준
+                                        </p>
+                                    )}
                                 </div>
-                                <div className="flex justify-between">
-                                    <span>주차 시간</span>
-                                    <span>{formatDuration(parkingInfo?.durationMinutes)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span>예상 요금</span>
-                                    <span>
-                    {parkingInfo
-                        ? `${parkingInfo.expectFee.toLocaleString()}원`
-                        : '-'}
-                  </span>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                className="mt-4 w-full rounded-lg bg-[#174ea6] py-2 text-sm text-white hover:bg-[#1450c8] transition disabled:bg-slate-400"
-                                onClick={handlePrimaryParkingClick}
-                                disabled={parkingLoading}
-                            >
-                                {parkingLoading
-                                    ? '처리 중'
-                                    : isParked
-                                        ? '출차하기'
-                                        : '입차하기'}
-                            </button>
-                            <button
-                                type="button"
-                                className="mt-2 w-full rounded-lg bg-[#f3f4f6] py-2 text-sm text-slate-700 hover:bg-[#e5e7eb] transition disabled:bg-slate-300"
-                                onClick={fetchPreview}
-                                disabled={parkingLoading}
-                            >
-                                새로고침
-                            </button>
-                            {lastUpdated && (
-                                <p className="mt-2 text-[11px] text-slate-400 text-right">
-                                    최근 갱신: {formatTime(lastUpdated)}
+                            ) : (
+                                <p className="text-sm text-slate-500">
+                                    주차 정보 없음. 입차 후 예상 요금을 확인해 보세요.
                                 </p>
                             )}
-                            {parkingError && (
-                                <p className="mt-1 text-xs text-red-500">
-                                    {parkingError}
-                                </p>
+
+                            {/* 버튼 영역 */}
+                            <div className="mt-4 flex gap-2">
+                                <button
+                                    type="button"
+                                    className="flex-1 rounded-lg bg-[#174ea6] py-2 text-xs text-white hover:bg-[#1450c8] transition"
+                                    onClick={handleEnterParking}
+                                >
+                                    입차하기
+                                </button>
+                                <button
+                                    type="button"
+                                    className="flex-1 rounded-lg bg-[#f3f4f6] py-2 text-xs text-slate-700 hover:bg-[#e5e7eb] transition"
+                                    onClick={handlePreviewFee}
+                                >
+                                    예상 요금 확인
+                                </button>
+                                <button
+                                    type="button"
+                                    className="flex-1 rounded-lg bg-[#f3f4f6] py-2 text-xs text-slate-700 hover:bg-[#e5e7eb] transition"
+                                    onClick={handlePrepareSettle}
+                                >
+                                    출차하기
+                                </button>
+                            </div>
+
+                            {isSettleStage && (
+                                <button
+                                    type="button"
+                                    className="mt-2 w-full rounded-lg bg-[#dc2626] py-2 text-xs text-white hover:bg-[#b91c1c] transition"
+                                    onClick={handleSettleParking}
+                                >
+                                    결제 하기 (정산)
+                                </button>
                             )}
                         </div>
 

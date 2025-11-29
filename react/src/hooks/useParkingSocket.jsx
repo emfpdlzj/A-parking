@@ -19,16 +19,13 @@ export function useParkingSocket(buildingId) {
             return
         }
 
-        // "Bearer xxx" 형태 -> 뒤에 JWT만 사용
+        // "Bearer xxx" 형태-> 뒤에 JWT만 사용
         const rawToken = accessToken.startsWith('Bearer ')
             ? accessToken.slice(7)
             : accessToken
 
-        // building 붙여보냄
         const wsUrl = `${WS_BASE}/${buildingId}`
-
-        // Subprotocol에 JWT 하나만 실어서 보냄
-        const ws = new WebSocket(wsUrl, rawToken)
+        const ws = new WebSocket(wsUrl, rawToken) // subprotocol = jwt
         wsRef.current = ws
 
         setError('')
@@ -53,16 +50,23 @@ export function useParkingSocket(buildingId) {
                 list.forEach((item) => {
                     if (!item) return
                     const id = Number(item.id ?? item.slot_number ?? item.slot)
-                    const occ = Number(
-                        item.occupied === true ? 1 : item.occupied
-                    )
+                    // 서버 occupied → 0/1로 정규화
+                    let occNum
+                    if (item.occupied === true) occNum = 1
+                    else if (item.occupied === false) occNum = 0
+                    else occNum = Number(item.occupied)
+
+                    const normalized = occNum === 1 ? 1 : 0
+
                     if (!Number.isNaN(id)) {
-                        map[id] = !!occ // true/false로 통일
+                        map[id] = normalized
                     }
                 })
 
                 setSlots((prev) =>
-                    msg.type === 'update' ? { ...prev, ...map } : map,
+                    msg.type === 'update'
+                        ? { ...prev, ...map } // 변경된 슬롯만 갱신
+                        : map, // init이면 전체 초기화
                 )
                 setError('')
             } catch (e) {
