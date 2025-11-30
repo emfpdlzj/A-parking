@@ -160,11 +160,28 @@ export default function BuildingSelectPage() {
         const fetchAnalysis = async () => {
             try {
                 const res = await getAnalysis(analysisBuilding)
-                const chartData =
-                    res.status?.map((item) => ({
-                        hourLabel: `${String(item.hour).padStart(2, '0')}:00`,
+
+                const raw = res.status ?? []
+
+                // 가장 최근 24개만 사용 (시간 순서로 정렬되어 있다고 가정)
+                const last24 = raw.slice(-24)
+                const now = new Date()
+
+                const chartData = last24.map((item, idx) => {
+                    // last24[0] = 가장 예전, last24[23] = 가장 최근
+                    const hoursAgo = last24.length - 1 - idx
+                    const ts = new Date(now.getTime() - hoursAgo * 60 * 60 * 1000)
+                    const hour = ts.getHours()
+                    const label = `${String(hour).padStart(2, '0')}:00`
+
+                    return {
+                        index: idx, // 0 ~ 23 : X축용
+                        hour,
+                        label,
                         percent: Math.round(item.avg_congestion_rate * 100),
-                    })) ?? []
+                    }
+                })
+
                 setAnalysisData(chartData)
                 setAnalysisError('')
             } catch {
@@ -382,26 +399,44 @@ export default function BuildingSelectPage() {
                             </div>
 
                             {analysisError ? (
-                                <p className="text-xs text-red-500">
-                                    {analysisError}
-                                </p>
+                                <p className="text-xs text-red-500">{analysisError}</p>
                             ) : (
                                 <div className="h-64">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <LineChart data={analysisData} margin={{ left: -20 }}>
                                             <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" />
+
                                             <XAxis
-                                                dataKey="hourLabel"
-                                                tick={{ fontSize: 10 }}
+                                                dataKey="index"           // 0~23 인덱스 기준
+                                                type="number"
+                                                domain={[0, Math.max(analysisData.length - 1, 0)]}
+                                                allowDecimals={false}
                                                 tickLine={false}
+                                                tick={{ fontSize: 10 }}
+                                                // 2시간 간격 tick (데이터가 24개라고 가정)
+                                                ticks={[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22].filter(
+                                                    (v) => v < analysisData.length,
+                                                )}
+                                                tickFormatter={(value) => {
+                                                    const item = analysisData[value]
+                                                    return item ? item.label : ''
+                                                }}
                                             />
+
                                             <YAxis
                                                 tick={{ fontSize: 10 }}
                                                 tickLine={false}
                                                 domain={[0, 100]}
                                                 unit="%"
                                             />
-                                            <Tooltip />
+
+                                            <Tooltip
+                                                labelFormatter={(value) => {
+                                                    const item = analysisData[value]
+                                                    return item ? item.label : ''
+                                                }}
+                                            />
+
                                             <Line
                                                 type="monotone"
                                                 dataKey="percent"
