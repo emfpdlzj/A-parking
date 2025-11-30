@@ -68,7 +68,7 @@ export default function BuildingSelectPage() {
     })
     const [isEditingProfile, setIsEditingProfile] = useState(false)
     const [editProfile, setEditProfile] = useState(profile)
-
+    const [analysisRangeText, setAnalysisRangeText] = useState('')
     const formatDuration = (minutes) => {
         if (minutes == null) return '-'
         const h = Math.floor(minutes / 60)
@@ -170,7 +170,6 @@ export default function BuildingSelectPage() {
     }, [])
 
     // 혼잡도 그래프 : 최근 24시간, 2시간 간격 표시
-    // 혼잡도 그래프 : 최근 24시간, 2시간 간격 표시
     useEffect(() => {
         const fetchAnalysis = async () => {
             try {
@@ -186,27 +185,46 @@ export default function BuildingSelectPage() {
                         const ts = new Date(
                             now.getTime() - hoursAgo * 60 * 60 * 1000,
                         )
-
-                        const year = ts.getFullYear()
-                        const month = String(ts.getMonth() + 1).padStart(2, '0')
-                        const date = String(ts.getDate()).padStart(2, '0')
                         const hour = ts.getHours()
-                        const timeLabel = `${String(hour).padStart(2, '0')}:00`
+                        const year = ts.getFullYear()
+                        const month = ts.getMonth() + 1
+                        const day = ts.getDate()
 
                         return {
                             index: idx,
                             hour,
-                            // 툴팁용 날짜/시간 라벨
-                            dateLabel: `${year}년 ${month}월 ${date}일`,
-                            timeLabel,
+                            dateLabel: `${year}년 ${month}월 ${day}일`,
+                            timeLabel: `${String(hour).padStart(2, '0')}:00`,
                             percent: Math.round(item.avg_congestion_rate * 100),
                         }
                     }) ?? []
 
                 setAnalysisData(chartData)
+                if (last24.length > 0) {
+                    const startTs = new Date(
+                        now.getTime() - (last24.length - 1) * 60 * 60 * 1000,
+                    )
+                    const endTs = now
+
+                    const fmt = (d) => {
+                        const y = d.getFullYear()
+                        const m = d.getMonth() + 1
+                        const day = d.getDate()
+                        const h = String(d.getHours()).padStart(2, '0')
+                        return `${m}월 ${String(day).padStart(2, '0')}일 ${h}시`
+                    }
+
+                    setAnalysisRangeText(
+                        `${fmt(startTs)} ~ ${fmt(endTs)} 기준`,
+                    )
+                } else {
+                    setAnalysisRangeText('')
+                }
+
                 setAnalysisError('')
             } catch {
                 setAnalysisError('혼잡도 데이터를 불러올 수 없음')
+                setAnalysisRangeText('')
             }
         }
 
@@ -507,15 +525,20 @@ export default function BuildingSelectPage() {
                         {/* 혼잡도 그래프 */}
                         <section className="bg-white rounded-2xl shadow-md p-4">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-sm font-semibold text-slate-800">
-                                    과거 혼잡도
-                                </h3>
+                                <div>
+                                    <h3 className="text-sm font-semibold text-slate-800">
+                                        과거 혼잡도
+                                    </h3>
+                                    {analysisRangeText && (
+                                        <p className="mt-0.5 text-[11px] text-slate-500">
+                                            {analysisRangeText}
+                                        </p>
+                                    )}
+                                </div>
                                 <select
                                     className="border border-slate-300 rounded-md text-xs px-2 py-1 bg-white"
                                     value={analysisBuilding}
-                                    onChange={(e) =>
-                                        setAnalysisBuilding(e.target.value)
-                                    }
+                                    onChange={(e) => setAnalysisBuilding(e.target.value)}
                                 >
                                     {BUILDINGS.map((b) => (
                                         <option key={b.id} value={b.id}>
@@ -546,30 +569,16 @@ export default function BuildingSelectPage() {
                                             <XAxis
                                                 dataKey="index"
                                                 type="number"
-                                                domain={[
-                                                    0,
-                                                    Math.max(
-                                                        analysisData.length - 1,
-                                                        0,
-                                                    ),
-                                                ]}
+                                                domain={[0, Math.max(analysisData.length - 1, 0)]}
                                                 allowDecimals={false}
                                                 tickLine={false}
                                                 tick={{ fontSize: 10 }}
-                                                ticks={[
-                                                    0, 2, 4, 6, 8, 10, 12, 14,
-                                                    16, 18, 20, 22,
-                                                ].filter(
-                                                    (v) =>
-                                                        v <
-                                                        analysisData.length,
+                                                ticks={[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22].filter(
+                                                    (v) => v < analysisData.length
                                                 )}
                                                 tickFormatter={(value) => {
-                                                    const item =
-                                                        analysisData[value]
-                                                    return item
-                                                        ? item.label
-                                                        : ''
+                                                    const item = analysisData[value]
+                                                    return item ? item.timeLabel : ''
                                                 }}
                                             />
                                             <YAxis
@@ -595,7 +604,7 @@ export default function BuildingSelectPage() {
                                                 }}
                                             />
                                             <Line
-                                                type="monotone"
+                                                 type="monotone"
                                                 dataKey="percent"
                                                 stroke="#174ea6"
                                                 strokeWidth={2}
