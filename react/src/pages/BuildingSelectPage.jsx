@@ -170,6 +170,7 @@ export default function BuildingSelectPage() {
     }, [])
 
     // 혼잡도 그래프 : 최근 24시간, 2시간 간격 표시
+    // 혼잡도 그래프 : 최근 24시간, 2시간 간격 표시
     useEffect(() => {
         const fetchAnalysis = async () => {
             try {
@@ -185,16 +186,20 @@ export default function BuildingSelectPage() {
                         const ts = new Date(
                             now.getTime() - hoursAgo * 60 * 60 * 1000,
                         )
+
+                        const year = ts.getFullYear()
+                        const month = String(ts.getMonth() + 1).padStart(2, '0')
+                        const date = String(ts.getDate()).padStart(2, '0')
                         const hour = ts.getHours()
-                        const label = `${String(hour).padStart(2, '0')}:00`
+                        const timeLabel = `${String(hour).padStart(2, '0')}:00`
 
                         return {
                             index: idx,
                             hour,
-                            label,
-                            percent: Math.round(
-                                item.avg_congestion_rate * 100,
-                            ),
+                            // 툴팁용 날짜/시간 라벨
+                            dateLabel: `${year}년 ${month}월 ${date}일`,
+                            timeLabel,
+                            percent: Math.round(item.avg_congestion_rate * 100),
                         }
                     }) ?? []
 
@@ -574,12 +579,19 @@ export default function BuildingSelectPage() {
                                                 unit="%"
                                             />
                                             <Tooltip
-                                                labelFormatter={(value) => {
-                                                    const item =
-                                                        analysisData[value]
-                                                    return item
-                                                        ? item.label
-                                                        : ''
+                                                content={({ active, payload }) => {
+                                                    if (!active || !payload || !payload.length) return null
+                                                    const point = payload[0].payload
+                                                    // point = { dateLabel, timeLabel, percent, ... }
+                                                    return (
+                                                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-[12px] text-slate-800">
+                                                            <div>{point.dateLabel}</div>
+                                                            <div>{point.timeLabel}</div>
+                                                            <div className="mt-1 text-[#2563eb] font-semibold">
+                                                                혼잡도 {point.percent} %
+                                                            </div>
+                                                        </div>
+                                                    )
                                                 }}
                                             />
                                             <Line
