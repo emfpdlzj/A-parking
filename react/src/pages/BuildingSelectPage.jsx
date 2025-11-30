@@ -48,8 +48,6 @@ export default function BuildingSelectPage() {
     const [parkingLoading, setParkingLoading] = useState(false)
     const [parkingError, setParkingError] = useState('')
     const [lastUpdated, setLastUpdated] = useState(null)
-    const [isSettleStage, setIsSettleStage] = useState(false) // 출차 버튼 누른 뒤 결제 단계 진입 여부
-
     const navigate = useNavigate()
     const [parkingStage, setParkingStage] = useState('idle')
 
@@ -79,13 +77,7 @@ export default function BuildingSelectPage() {
         return `${m}분`
     }
 
-    const formatTime = (date) => {
-        if (!date) return ''
-        const d = typeof date === 'string' ? new Date(date) : date
-        const hh = String(d.getHours()).padStart(2, '0')
-        const mm = String(d.getMinutes()).padStart(2, '0')
-        return `${hh}:${mm}`
-    }
+
 
 
     const handleEnterClick = async () => {
@@ -115,13 +107,6 @@ export default function BuildingSelectPage() {
         }
     }
 
-    const handlePrimaryParkingClick = async () => {
-        if (isParked) {
-            await handleSettleClick()
-        } else {
-            await handleEnterClick()
-        }
-    }
     const handleStartEditProfile = () => {
         setEditProfile(profile)
         setIsEditingProfile(true)
@@ -198,25 +183,27 @@ export default function BuildingSelectPage() {
         const [bId, slotStr] = favId.split(':')
         const slot = Number(slotStr)
         const building = BUILDINGS.find((b) => b.id === bId)
-        const status = getSlotStatus(bId, slot)
+        const rawStatus = getSlotStatus(bId, slot) // true / false / null / undefined
 
         let label = '상태 알 수 없음'
         let badgeClass = 'bg-[#f3f4f6] text-slate-500'
 
-        if (status === true) {
+        if (rawStatus === true) {
             label = '사용 중'
             badgeClass = 'bg-[#fce8e6] text-[#c5221f]'
-        } else if (status === false) {
+        } else if (rawStatus === false) {
             label = '비어있음'
             badgeClass = 'bg-[#e6f4ea] text-[#137333]'
         }
 
         return {
             id: favId,
+            buildingId: bId,              // ← 나중에 navigate에 씀
             buildingName: building?.name || bId,
             slot,
             label,
             badgeClass,
+            status: rawStatus ?? null,    // undefined → null 로 통일
         }
     })
     // 입차하기
@@ -677,15 +664,28 @@ export default function BuildingSelectPage() {
                                             key={item.id}
                                             className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-2"
                                         >
-                                            <span>
-                                                {item.buildingName}{' '}
-                                                {item.slot}번
-                                            </span>
-                                            <span
-                                                className={`text-xs px-2 py-0.5 rounded-full ${item.badgeClass}`}
-                                            >
-                                                {item.label}
-                                            </span>
+                    <span>
+                        {item.buildingName} {item.slot}번
+                    </span>
+
+                                            {/* 상태가 알 수 없음일 때 → 버튼으로 이동 */}
+                                            {item.status === null ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        navigate(`/parking/${item.buildingId}`)
+                                                    }
+                                                    className="text-xs px-2 py-0.5 rounded-full border border-slate-300 text-slate-600 hover:bg-[#eef2ff] transition"
+                                                >
+                                                    점유 여부 보러가기
+                                                </button>
+                                            ) : (
+                                                <span
+                                                    className={`text-xs px-2 py-0.5 rounded-full ${item.badgeClass}`}
+                                                >
+                            {item.label}
+                        </span>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -694,11 +694,7 @@ export default function BuildingSelectPage() {
                             <button
                                 type="button"
                                 className="mt-3 w-full rounded-lg border border-dashed border-slate-300 py-2 text-sm text-slate-500 hover:bg-[#f9fafb] transition"
-                                onClick={() =>
-                                    navigate(
-                                        `/parking/${profile.favoriteBuilding}`,
-                                    )
-                                }
+                                onClick={() => navigate(`/parking/${profile.favoriteBuilding}`)}
                             >
                                 자리 추가하러 가기
                             </button>
