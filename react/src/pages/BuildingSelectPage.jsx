@@ -42,32 +42,33 @@ export default function BuildingSelectPage() {
     const [analysisError, setAnalysisError] = useState('')
 
     const [favorites, setFavorites] = useState(() => loadFavs())
+
     // 내 주차 현황 패널 상태
     const [parkingInfo, setParkingInfo] = useState(null) // preview / settle 응답 raw 저장
     const [parkingStatusText, setParkingStatusText] = useState('주차 정보 없음')
     const [parkingLoading, setParkingLoading] = useState(false)
     const [parkingError, setParkingError] = useState('')
     const [lastUpdated, setLastUpdated] = useState(null)
-    const navigate = useNavigate()
-    const [parkingStage, setParkingStage] = useState('idle')
 
-    const isParked = !!parkingInfo
+    const navigate = useNavigate()
+
     const [profile, setProfile] = useState(() => {
         try {
             const raw = localStorage.getItem('profile')
             if (raw) return JSON.parse(raw)
         } catch {
-            // 무시
         }
         return {
             name: '홍길동',
             studentId: '202012345',
             favoriteBuilding: 'paldal',
             carNumber: '12가3456',
+            profileImage: null,    // 여기 추가
         }
     })
     const [isEditingProfile, setIsEditingProfile] = useState(false)
     const [editProfile, setEditProfile] = useState(profile)
+
     const formatDuration = (minutes) => {
         if (minutes == null) return '-'
         const h = Math.floor(minutes / 60)
@@ -76,37 +77,7 @@ export default function BuildingSelectPage() {
         if (h > 0) return `${h}시간`
         return `${m}분`
     }
-
-
-
-
-    const handleEnterClick = async () => {
-        setParkingLoading(true)
-        setParkingError('')
-        try {
-            await enterParking()
-        } catch {
-            setParkingError('입차 처리 중 오류 발생')
-        } finally {
-            setParkingLoading(false)
-        }
-    }
-
-    const handleSettleClick = async () => {
-        setParkingLoading(true)
-        setParkingError('')
-        try {
-            await settleParkingFee()
-            setParkingInfo(null)
-            setParkingStatusText('주차 정보 없음')
-            setLastUpdated(new Date())
-        } catch {
-            setParkingError('정산 처리 중 오류 발생')
-        } finally {
-            setParkingLoading(false)
-        }
-    }
-
+    //프로필편집
     const handleStartEditProfile = () => {
         setEditProfile(profile)
         setIsEditingProfile(true)
@@ -125,7 +96,6 @@ export default function BuildingSelectPage() {
         try {
             localStorage.setItem('profile', JSON.stringify(editProfile))
         } catch {
-            // 저장 실패 시 무시
         }
     }
 
@@ -133,6 +103,24 @@ export default function BuildingSelectPage() {
         setIsEditingProfile(false)
         setEditProfile(profile)
     }
+    const handleChangeProfileImage = (file) => {
+        if (!file) return
+        const reader = new FileReader()
+        reader.onloadend = () => {
+            setEditProfile((prev) => ({
+                ...prev,
+                profileImage: reader.result,
+            }))
+        }
+        reader.readAsDataURL(file)
+    }
+    const handleClearProfileImage = () => {
+        setEditProfile((prev) => ({
+            ...prev,
+            profileImage: null,
+        }))
+    }
+    //요약 정보 갱신
     useEffect(() => {
         let timerId
 
@@ -156,31 +144,34 @@ export default function BuildingSelectPage() {
         return () => clearInterval(timerId)
     }, [])
 
+    // 혼잡도 그래프 :최근 24시간, 2시간 간격 표시
     useEffect(() => {
         const fetchAnalysis = async () => {
             try {
                 const res = await getAnalysis(analysisBuilding)
-
                 const raw = res.status ?? []
 
-                // 가장 최근 24개만 사용 (시간 순서로 정렬되어 있다고 가정)
                 const last24 = raw.slice(-24)
                 const now = new Date()
 
-                const chartData = last24.map((item, idx) => {
-                    // last24[0] = 가장 예전, last24[23] = 가장 최근
-                    const hoursAgo = last24.length - 1 - idx
-                    const ts = new Date(now.getTime() - hoursAgo * 60 * 60 * 1000)
-                    const hour = ts.getHours()
-                    const label = `${String(hour).padStart(2, '0')}:00`
+                const chartData =
+                    last24.map((item, idx) => {
+                        const hoursAgo = last24.length - 1 - idx
+                        const ts = new Date(
+                            now.getTime() - hoursAgo * 60 * 60 * 1000,
+                        )
+                        const hour = ts.getHours()
+                        const label = `${String(hour).padStart(2, '0')}:00`
 
-                    return {
-                        index: idx, // 0 ~ 23 : X축용
-                        hour,
-                        label,
-                        percent: Math.round(item.avg_congestion_rate * 100),
-                    }
-                })
+                        return {
+                            index: idx,
+                            hour,
+                            label,
+                            percent: Math.round(
+                                item.avg_congestion_rate * 100,
+                            ),
+                        }
+                    }) ?? []
 
                 setAnalysisData(chartData)
                 setAnalysisError('')
@@ -196,6 +187,7 @@ export default function BuildingSelectPage() {
         navigate(`/parking/${buildingId}`)
     }
 
+    //즐겨찾기
     const favoriteItems = favorites.map((favId) => {
         const [bId, slotStr] = favId.split(':')
         const slot = Number(slotStr)
@@ -215,26 +207,30 @@ export default function BuildingSelectPage() {
 
         return {
             id: favId,
-            buildingId: bId,              // ← 나중에 navigate에 씀
+            buildingId: bId,
             buildingName: building?.name || bId,
             slot,
             label,
             badgeClass,
-            status: rawStatus ?? null,    // undefined → null 로 통일
+            status: rawStatus ?? null,
         }
     })
-    // 입차하기
+    //주차요금
+    // 1) 입차하기
     const handleEnterParking = async () => {
         setParkingLoading(true)
         setParkingError('')
+
         try {
-            // Authorization 헤더만으로 입차 처리
             await enterParking()
 
             setParkingStage('entered')
             setParkingInfo(null)
-            setParkingStatusText('입차 완료! 이제 예상 요금 확인 또는 출차를 할 수 있습니다.')
             setLastUpdated(new Date())
+
+            setParkingStatusText(
+                `차량 번호: ${profile.carNumber}\n입차 완료!\n"예상 요금 확인" 버튼으로 현재까지의 요금을 확인할 수 있습니다.`
+            )
         } catch (error) {
             console.error('enterParking 오류', error.response?.status, error.response?.data || error)
             const msg =
@@ -242,12 +238,13 @@ export default function BuildingSelectPage() {
                 '입차 처리 중 오류가 발생했습니다.'
             setParkingError(msg)
             setParkingStatusText('입차 처리에 실패했습니다.')
+            setParkingStage('idle')
         } finally {
             setParkingLoading(false)
         }
     }
 
-    // 예상 요금 확인
+    // 2) 예상 요금 확인 (새로고침)
     const handlePreviewFee = async () => {
         setParkingLoading(true)
         setParkingError('')
@@ -257,8 +254,12 @@ export default function BuildingSelectPage() {
             setParkingInfo(data)
             setLastUpdated(new Date())
 
+            const minutes = data.duration_minutes ?? 0
+            const h = Math.floor(minutes / 60)
+            const m = minutes % 60
+
             setParkingStatusText(
-                `현재까지 예상 요금은 ${data.expect_fee.toLocaleString()}원 입니다. (이용 시간 ${data.duration_minutes}분)`
+                `현재까지 예상 요금은 ${data.expect_fee.toLocaleString()}원 입니다.\n이용 시간 : ${h}시간 ${m}분`
             )
         } catch (error) {
             console.error('previewParkingFee 오류', error.response?.status, error.response?.data || error)
@@ -271,26 +272,43 @@ export default function BuildingSelectPage() {
         }
     }
 
-// 출차하기 버튼 (백엔드 호출 X, 정산 단계로 UI만 전환)
+    // 3) 출차하기 (백엔드 호출 X, 상태 안내만)
     const handleExitClick = () => {
+        if (parkingStage !== 'entered' && parkingStage !== 'readyToPay') {
+            setParkingStatusText('아직 입차가 되지 않았습니다!')
+            return
+        }
+
         setParkingStage('readyToPay')
-        setParkingStatusText('출차 처리 완료. 결제하기 버튼을 눌러 최종 정산을 진행해 주세요.')
+        setLastUpdated(new Date())
+        setParkingStatusText(
+            '출차 처리 완료!\n"결제하기" 버튼을 눌러 최종 정산을 진행해 주세요.'
+        )
     }
 
-// 최종 정산(결제) 처리
+    // 4) 최종 정산 / 결제하기
     const handleSettleFee = async () => {
         setParkingLoading(true)
         setParkingError('')
 
         try {
             const data = await settleParkingFee()
-            setParkingInfo(data)
+
+            // settle 응답 + expect_fee 0으로 세팅
+            const enriched = {
+                ...data,
+                expect_fee: 0,
+            }
+
+            setParkingInfo(enriched)
             setLastUpdated(new Date())
+
             setParkingStatusText(
-                `총 ${data.duration_minutes}분 이용, 최종 요금 ${data.final_fee.toLocaleString()}원이 결제되었습니다.`
+                `결제가 완료되었습니다.\n총 ${formatDuration(
+                    data.duration_minutes,
+                )} 이용, 최종 요금 ${data.final_fee.toLocaleString()}원이 결제되었습니다.`
             )
 
-            // 결제까지 끝났으니 다시 "입차하기" 상태로 초기화
             setParkingStage('idle')
         } catch (error) {
             console.error('settleParkingFee 오류', error.response?.status, error.response?.data || error)
@@ -303,13 +321,19 @@ export default function BuildingSelectPage() {
         }
     }
 
+    const currentDurationMinutes = parkingInfo?.duration_minutes ?? 0
+    const durationText = formatDuration(currentDurationMinutes)
+    const lastUpdatedText = lastUpdated
+        ? lastUpdated.toLocaleString()
+        : '-'
+
     return (
         <div className="min-h-screen flex flex-col bg-[#f5f7fb]">
             <Header />
 
             <main className="flex-1 px-10 py-6">
                 <div className="flex gap-6">
-                    {/* 왼쪽 */}
+                    {/* 왼쪽 영역 */}
                     <section className="flex-[2] flex flex-col gap-6">
                         {/* 건물 선택 카드 */}
                         <div>
@@ -327,7 +351,9 @@ export default function BuildingSelectPage() {
                                         <button
                                             key={b.id}
                                             type="button"
-                                            onClick={() => handleSelectBuilding(b.id)}
+                                            onClick={() =>
+                                                handleSelectBuilding(b.id)
+                                            }
                                             className="bg-white rounded-2xl shadow-md hover:shadow-lg transition text-left overflow-hidden"
                                         >
                                             <div className="flex">
@@ -364,7 +390,9 @@ export default function BuildingSelectPage() {
                                                 <div className="h-1.5 rounded-full bg-[#e5e7eb] overflow-hidden">
                                                     <div
                                                         className="h-full bg-[#174ea6]"
-                                                        style={{ width: `${rate}%` }}
+                                                        style={{
+                                                            width: `${rate}%`,
+                                                        }}
                                                     />
                                                 </div>
                                             </div>
@@ -388,7 +416,9 @@ export default function BuildingSelectPage() {
                                 <select
                                     className="border border-slate-300 rounded-md text-xs px-2 py-1 bg-white"
                                     value={analysisBuilding}
-                                    onChange={(e) => setAnalysisBuilding(e.target.value)}
+                                    onChange={(e) =>
+                                        setAnalysisBuilding(e.target.value)
+                                    }
                                 >
                                     {BUILDINGS.map((b) => (
                                         <option key={b.id} value={b.id}>
@@ -399,44 +429,67 @@ export default function BuildingSelectPage() {
                             </div>
 
                             {analysisError ? (
-                                <p className="text-xs text-red-500">{analysisError}</p>
+                                <p className="text-xs text-red-500">
+                                    {analysisError}
+                                </p>
                             ) : (
                                 <div className="h-64">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <LineChart data={analysisData} margin={{ left: -20 }}>
-                                            <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" />
-
+                                    <ResponsiveContainer
+                                        width="100%"
+                                        height="100%"
+                                    >
+                                        <LineChart
+                                            data={analysisData}
+                                            margin={{ left: -20 }}
+                                        >
+                                            <CartesianGrid
+                                                stroke="#e5e7eb"
+                                                strokeDasharray="3 3"
+                                            />
                                             <XAxis
-                                                dataKey="index"           // 0~23 인덱스 기준
+                                                dataKey="index"
                                                 type="number"
-                                                domain={[0, Math.max(analysisData.length - 1, 0)]}
+                                                domain={[
+                                                    0,
+                                                    Math.max(
+                                                        analysisData.length - 1,
+                                                        0,
+                                                    ),
+                                                ]}
                                                 allowDecimals={false}
                                                 tickLine={false}
                                                 tick={{ fontSize: 10 }}
-                                                // 2시간 간격 tick (데이터가 24개라고 가정)
-                                                ticks={[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22].filter(
-                                                    (v) => v < analysisData.length,
+                                                ticks={[
+                                                    0, 2, 4, 6, 8, 10, 12, 14,
+                                                    16, 18, 20, 22,
+                                                ].filter(
+                                                    (v) =>
+                                                        v <
+                                                        analysisData.length,
                                                 )}
                                                 tickFormatter={(value) => {
-                                                    const item = analysisData[value]
-                                                    return item ? item.label : ''
+                                                    const item =
+                                                        analysisData[value]
+                                                    return item
+                                                        ? item.label
+                                                        : ''
                                                 }}
                                             />
-
                                             <YAxis
                                                 tick={{ fontSize: 10 }}
                                                 tickLine={false}
                                                 domain={[0, 100]}
                                                 unit="%"
                                             />
-
                                             <Tooltip
                                                 labelFormatter={(value) => {
-                                                    const item = analysisData[value]
-                                                    return item ? item.label : ''
+                                                    const item =
+                                                        analysisData[value]
+                                                    return item
+                                                        ? item.label
+                                                        : ''
                                                 }}
                                             />
-
                                             <Line
                                                 type="monotone"
                                                 dataKey="percent"
@@ -453,6 +506,7 @@ export default function BuildingSelectPage() {
 
                     {/* 오른쪽 패널 */}
                     <aside className="w-[340px] shrink-0 flex flex-col gap-4">
+                        {/* 내 정보 */}
                         <div className="bg-white rounded-2xl shadow-md p-4">
                             <div className="flex items-center justify-between mb-3">
                                 <h3 className="text-sm font-semibold text-slate-800">
@@ -471,6 +525,49 @@ export default function BuildingSelectPage() {
 
                             {isEditingProfile ? (
                                 <div className="space-y-2 text-sm text-slate-700">
+                                    <div className="flex items-center gap-4 mb-3">
+                                        <div className="w-12 h-12 rounded-full bg-[#e5e7eb] overflow-hidden flex items-center justify-center text-[11px] text-slate-500">
+                                            {editProfile.profileImage ? (
+                                                <img
+                                                    src={editProfile.profileImage}
+                                                    alt={editProfile.name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <span>사진</span>
+                                            )}
+                                        </div>
+
+                                        <div className="flex flex-col gap-1">
+        <span className="text-[11px] text-slate-500">
+          프로필 사진
+        </span>
+                                            <div className="flex items-center gap-2">
+                                                <label className="inline-flex items-center justify-center px-3 py-1.5 rounded-md bg-[#f3f4f6] text-xs text-slate-700 cursor-pointer hover:bg-[#e5e7eb]">
+                                                    이미지 선택
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) =>
+                                                            handleChangeProfileImage(e.target.files?.[0])
+                                                        }
+                                                        className="hidden"
+                                                    />
+                                                </label>
+
+                                                {editProfile.profileImage && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleClearProfileImage}
+                                                        className="inline-flex items-center justify-center px-3 py-1.5 rounded-md bg-[#f3f4f6] text-xs text-slate-700 cursor-pointer hover:bg-[#e5e7eb]"
+                                                    >
+                                                        사진 삭제
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div className="flex justify-between items-center gap-4">
                                         <span className="whitespace-nowrap">
                                             이름
@@ -508,7 +605,9 @@ export default function BuildingSelectPage() {
                                             즐겨찾는 건물
                                         </span>
                                         <select
-                                            value={editProfile.favoriteBuilding}
+                                            value={
+                                                editProfile.favoriteBuilding
+                                            }
                                             onChange={(e) =>
                                                 handleChangeProfileField(
                                                     'favoriteBuilding',
@@ -558,6 +657,25 @@ export default function BuildingSelectPage() {
                                 </div>
                             ) : (
                                 <div className="space-y-1 text-sm text-slate-700">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="w-12 h-12 rounded-full bg-[#e5e7eb] overflow-hidden flex items-center justify-center text-[11px] text-slate-500">
+                                            {profile.profileImage ? (
+                                                <img
+                                                    src={profile.profileImage}
+                                                    alt={profile.name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <span>사진</span>
+                                            )}
+                                        </div>
+                                        <div className="text-sm">
+                                            <div className="font-semibold text-slate-800">
+                                                {profile.name}
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div className="flex justify-between">
                                         <span>이름</span>
                                         <span>{profile.name}</span>
@@ -586,25 +704,15 @@ export default function BuildingSelectPage() {
                             )}
                         </div>
 
-                        {/* 오른쪽 패널 중 "현재 내 좌석 이용현황" 카드 */}
+                        {/* 현재 내 주차 이용 현황 */}
                         <div className="bg-white rounded-2xl shadow-md p-4">
                             <h3 className="text-sm font-semibold text-slate-800 mb-2">
                                 현재 내 주차 이용 현황
                             </h3>
 
-                            <p className="text-xs text-slate-500 mb-2">
-                                실제 요금 계산/정산은 Express 서버의 주차 API와 연동됩니다.
-                            </p>
-
                             {parkingStatusText && (
-                                <p className="text-xs text-slate-700 mb-2">
+                                <p className="text-xs text-slate-700 mb-2 whitespace-pre-line">
                                     {parkingStatusText}
-                                </p>
-                            )}
-
-                            {lastUpdated && (
-                                <p className="text-[11px] text-slate-400 mb-2">
-                                    마지막 갱신: {lastUpdated.toLocaleString()}
                                 </p>
                             )}
 
@@ -614,55 +722,9 @@ export default function BuildingSelectPage() {
                                 </p>
                             )}
 
-                            {/* 버튼들 */}
-                            <div className="flex flex-col gap-2 mt-2">
-                                {parkingStage === 'idle' && (
-                                    <button
-                                        type="button"
-                                        onClick={handleEnterParking}
-                                        disabled={parkingLoading}
-                                        className="w-full rounded-lg bg-[#174ea6] text-white text-xs py-2 hover:bg-[#1d4ed8] disabled:opacity-60"
-                                    >
-                                        {parkingLoading ? '입차 처리 중...' : '입차하기'}
-                                    </button>
-                                )}
-
-                                {parkingStage === 'entered' && (
-                                    <>
-                                        <button
-                                            type="button"
-                                            onClick={handlePreviewFee}
-                                            disabled={parkingLoading}
-                                            className="w-full rounded-lg bg-[#f3f4f6] text-xs py-2 text-slate-700 hover:bg-[#e5e7eb] disabled:opacity-60"
-                                        >
-                                            {parkingLoading ? '조회 중...' : '주차 요금 확인'}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={handleExitClick}
-                                            disabled={parkingLoading}
-                                            className="w-full rounded-lg bg-[#dcfce7] text-xs py-2 text-[#166534] hover:bg-[#bbf7d0] disabled:opacity-60"
-                                        >
-                                            출차하기
-                                        </button>
-                                    </>
-                                )}
-
-                                {parkingStage === 'readyToPay' && (
-                                    <button
-                                        type="button"
-                                        onClick={handleSettleFee}
-                                        disabled={parkingLoading}
-                                        className="w-full rounded-lg bg-[#f97316] text-white text-xs py-2 hover:bg-[#ea580c] disabled:opacity-60"
-                                    >
-                                        {parkingLoading ? '결제 처리 중...' : '결제하기'}
-                                    </button>
-                                )}
-                            </div>
-
-                            {/* preview / settle 응답 요약 표현 (선택) */}
+                            {/* 서버 응답 요약 (항상 버튼 위쪽) */}
                             {parkingInfo && (
-                                <div className="mt-3 border-t pt-2 text-xs text-slate-700 space-y-1">
+                                <div className="mt-2 mb-3 text-xs text-slate-700 space-y-1">
                                     {'expect_fee' in parkingInfo && (
                                         <div>
                                             예상 요금: {parkingInfo.expect_fee.toLocaleString()}원 (
@@ -681,8 +743,58 @@ export default function BuildingSelectPage() {
                                     )}
                                 </div>
                             )}
+
+                            {/* 첫 줄: 입차 / 예상 요금 / 출차 */}
+                            <div className="mt-2 flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={handleEnterParking}
+                                    disabled={parkingLoading}
+                                    className="flex-1 rounded-lg bg-[#2563eb] text-white text-xs py-2 hover:bg-[#1d4ed8] disabled:opacity-60"
+                                >
+                                    {parkingLoading ? '처리 중...' : '입차하기'}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={handlePreviewFee}
+                                    disabled={parkingLoading}
+                                    className="flex-1 rounded-lg border border-slate-300 bg-white text-xs py-2 text-slate-700 hover:bg-[#f9fafb] disabled:opacity-60"
+                                >
+                                    예상 요금 확인
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={handleExitClick}
+                                    disabled={parkingLoading}
+                                    className="flex-1 rounded-lg bg-[#2563eb] text-white text-xs py-2 hover:bg-[#1d4ed8] disabled:opacity-60"
+                                >
+                                    출차하기
+                                </button>
+                            </div>
+
+                            {/* 둘째 줄: 결제하기 (빨강) */}
+                            <div className="mt-2">
+                                <button
+                                    type="button"
+                                    onClick={handleSettleFee}
+                                    disabled={parkingLoading}
+                                    className="w-full rounded-lg bg-[#ef4444] text-white text-xs py-2 hover:bg-[#dc2626] disabled:opacity-60"
+                                >
+                                    {parkingLoading ? '결제 처리 중...' : '결제하기'}
+                                </button>
+                            </div>
+
+                            {/* 항상 맨 아래에 보이는 정보 */}
+                            <div className="mt-3 border-top pt-2 text-[11px] text-slate-500 space-y-1 border-t border-slate-200">
+                                <div>내 차량 번호: {profile.carNumber}</div>
+                                <div>현재 주차중 시간 : {durationText}</div>
+                                <div>마지막 갱신: {lastUpdatedText}</div>
+                            </div>
                         </div>
 
+                        {/* 내 선호 자리 */}
                         <div className="bg-white rounded-2xl shadow-md p-4">
                             <h3 className="text-sm font-semibold text-slate-800 mb-3">
                                 내 선호 자리
@@ -699,18 +811,20 @@ export default function BuildingSelectPage() {
                                             key={item.id}
                                             className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-2"
                                         >
-                    <span>
-                        {item.buildingName} {item.slot}번
-                    </span>
+                                            <span>
+                                                {item.buildingName}{' '}
+                                                {item.slot}번
+                                            </span>
 
-                                            {/* 상태가 알 수 없음일 때 → 버튼으로 이동 */}
                                             {item.status === null ? (
                                                 <button
                                                     type="button"
                                                     onClick={() =>
-                                                        navigate(`/parking/${item.buildingId}`)
+                                                        navigate(
+                                                            `/parking/${item.buildingId}`,
+                                                        )
                                                     }
-                                                    className="text-xs px-2 py-0.5 rounded-full border border-slate-300 text-slate-600 hover:bg-[#eef2ff] transition"
+                                                    className="text-xs px-2 py-0.5 rounded-lg border border-slate-300 text-slate-600 hover:bg-[#eef2ff] transition"
                                                 >
                                                     점유 여부 보러가기
                                                 </button>
@@ -718,8 +832,8 @@ export default function BuildingSelectPage() {
                                                 <span
                                                     className={`text-xs px-2 py-0.5 rounded-full ${item.badgeClass}`}
                                                 >
-                            {item.label}
-                        </span>
+                                                    {item.label}
+                                                </span>
                                             )}
                                         </div>
                                     ))}
@@ -729,7 +843,11 @@ export default function BuildingSelectPage() {
                             <button
                                 type="button"
                                 className="mt-3 w-full rounded-lg border border-dashed border-slate-300 py-2 text-sm text-slate-500 hover:bg-[#f9fafb] transition"
-                                onClick={() => navigate(`/parking/${profile.favoriteBuilding}`)}
+                                onClick={() =>
+                                    navigate(
+                                        `/parking/${profile.favoriteBuilding}`,
+                                    )
+                                }
                             >
                                 자리 추가하러 가기
                             </button>
