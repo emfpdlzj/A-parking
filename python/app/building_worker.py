@@ -3,6 +3,7 @@ import asyncio
 import numpy as np
 import cv2
 import random
+from datetime import datetime
 
 from app.cache import roi_cache
 from app.redis_pub import redis_pub
@@ -21,16 +22,48 @@ yolo_detector = YoloCarDetector("yolo11n.pt")
 print("YOLO 모델 로딩 성공\n")
 
 
-def get_base_probability(tick: int) -> float:
-    # tick에 따른 기본 점유 확률 계산
-    phase = tick % 90
-
-    if phase < 30:
-        return 0.2  # 한가한 구간
-    elif phase < 60:
-        return 0.5  # 보통 구간
+def get_base_probability_by_hour(hour: int) -> float:
+    # 시간대별 기본 점유 확률 계산
+    # 00~06시  심야 시간
+    # 06~09시  서서히 증가
+    # 09~17시 낮 피크 시간
+    # 17~20시 퇴근 시간대
+    # 20~24시 저녁 시간
+    if 0 <= hour < 6:
+        return 0.1
+    elif 6 <= hour < 9:
+        return 0.4
+    elif 9 <= hour < 17:
+        return 0.75
+    elif 17 <= hour < 20:
+        return 0.6
     else:
-        return 0.8  # 혼잡 구간
+        return 0.3
+
+
+def get_change_probability_by_hour(hour: int) -> float:
+    # 시간대별 상태 변경 비율 계산
+    # 심야에는 거의 안 바뀜
+    # 출퇴근 시간에는 변화 빈도 증가
+    if 0 <= hour < 6:
+        return 0.03
+    elif 6 <= hour < 9:
+        return 0.20
+    elif 9 <= hour < 17:
+        return 0.12
+    elif 17 <= hour < 20:
+        return 0.18
+    else:
+        return 0.07
+
+
+def get_current_probs() -> tuple[float, float]:
+    # 현재 시각 기준으로 base_p와 change_prob 계산
+    now = datetime.now()
+    hour = now.hour
+    base_p = get_base_probability_by_hour(hour)
+    change_prob = get_change_probability_by_hour(hour)
+    return base_p, change_prob
 
 
 # paldal 카메라 1 (1~16번 실제 slot)
@@ -55,12 +88,10 @@ async def get_paldal_cam1_real_slots(frame, roi_slots):
     return slot_state
 
 
-# paldal 카메라 2 (17~70 mock, 시간에 따른 혼잡도 패턴 적용)
-def make_paldal_cam2_mock_slots(old_state: dict, tick: int) -> dict:
-    # tick에 따른 기본 점유 확률 계산
-    base_p = get_base_probability(tick)
-    # 상태 변경 시도 비율 설정
-    change_prob = 0.15
+# paldal 카메라 2 (17~70 mock, 시간대별 혼잡도 패턴 적용)
+def make_paldal_cam2_mock_slots(old_state: dict) -> dict:
+    # 현재 시각 기준으로 기본 점유 확률과 변경 비율 계산
+    base_p, change_prob = get_current_probs()
 
     new_state: dict[int, int] = {}
 
@@ -68,12 +99,13 @@ def make_paldal_cam2_mock_slots(old_state: dict, tick: int) -> dict:
         prev = old_state.get(slot, 0)
 
         if random.random() < change_prob:
-            # 일부 슬롯에 대해서만 새 상태 생성
+            # 일부 슬롯에 대해서만 새 점유 상태 생성
             new_state[slot] = 1 if random.random() < base_p else 0
         else:
             # 나머지는 이전 상태 유지
             new_state[slot] = prev
 
+    print(f"[paldal cam2 mock] base_p={base_p:.2f}, change_prob={change_prob:.2f}")
     return new_state
 
 
@@ -104,7 +136,7 @@ async def process_paldal_building():
         frame_np = np.asarray(frame)
 
         real16 = await get_paldal_cam1_real_slots(frame_np, cam1_slots)
-        mock54 = make_paldal_cam2_mock_slots(old_state, tick)
+        mock54 = make_paldal_cam2_mock_slots(old_state)
 
         new_state = {**real16, **mock54}
 
@@ -128,7 +160,7 @@ async def process_paldal_building():
         await asyncio.sleep(1)
 
 
-# 다른 건물 mock 70칸 루프 (시간에 따른 혼잡도 패턴 적용)
+# 다른 건물 mock 70칸 루프 (시간대별 혼잡도 패턴 적용)
 async def process_mock_building(building: str):
     print(f"streaming start for {building}")
 
@@ -138,8 +170,7 @@ async def process_mock_building(building: str):
     while True:
         tick += 1
 
-        base_p = get_base_probability(tick)
-        change_prob = 0.15
+        base_p, change_prob = get_current_probs()
 
         new_state: dict[int, int] = {}
 
@@ -156,7 +187,9 @@ async def process_mock_building(building: str):
             if old_state.get(slot_id) != occ:
                 diff.append({"id": slot_id, "occupied": bool(occ)})
 
-        print(f"[{building}] tick={tick}, base_p={base_p}, diff 개수={len(diff)}")
+        print(
+            f"[{building}] tick={tick}, base_p={base_p:.2f}, change_prob={change_prob:.2f}, diff 개수={len(diff)}"
+        )
 
         if diff:
             packet = {"buildingId": building, "results": diff}
