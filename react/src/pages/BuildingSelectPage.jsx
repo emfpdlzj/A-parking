@@ -1,14 +1,10 @@
-// 건물 선택 페이지
+// BuildingSelectPage.jsx
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
-import {
-    getParkingSummary,
-    getAnalysis,
-    enterParking,
-    previewParkingFee,
-    settleParkingFee,
-} from '../api/parking'
+import ParkingUsagePanel from '../components/ParkingUsagePanel'
+import FavoriteSlotsPanel from '../components/FavoriteSlotsPanel'
+import { getParkingSummary, getAnalysis } from '../api/parking'
 import {
     LineChart,
     Line,
@@ -19,7 +15,6 @@ import {
     ResponsiveContainer,
 } from 'recharts'
 import { loadFavs } from '../utils/favStorage'
-import { getSlotStatus } from '../utils/slotStatusStorage'
 
 import paldalImg from '../assets/buildings/paldal.svg'
 import libraryImg from '../assets/buildings/library.svg'
@@ -40,16 +35,10 @@ export default function BuildingSelectPage() {
     const [analysisBuilding, setAnalysisBuilding] = useState('paldal')
     const [analysisData, setAnalysisData] = useState([])
     const [analysisError, setAnalysisError] = useState('')
+    const [analysisRangeText, setAnalysisRangeText] = useState('')
 
     const [favorites, setFavorites] = useState(() => loadFavs())
 
-    // 내 주차 현황 패널 상태
-    const [parkingInfo, setParkingInfo] = useState(null) // preview / settle 응답 raw 저장
-    const [parkingStatusText, setParkingStatusText] = useState('주차 정보 없음')
-    const [parkingLoading, setParkingLoading] = useState(false)
-    const [parkingError, setParkingError] = useState('')
-    const [lastUpdated, setLastUpdated] = useState(null)
-    const [parkingStage, setParkingStage] = useState('idle') //주차 화면 렌더링 처리용
     const navigate = useNavigate()
 
     const [profile, setProfile] = useState(() => {
@@ -68,38 +57,8 @@ export default function BuildingSelectPage() {
     })
     const [isEditingProfile, setIsEditingProfile] = useState(false)
     const [editProfile, setEditProfile] = useState(profile)
-    const [analysisRangeText, setAnalysisRangeText] = useState('')
-    const formatDuration = (minutes) => {
-        if (minutes == null) return '-'
-        const h = Math.floor(minutes / 60)
-        const m = minutes % 60
-        if (h > 0 && m > 0) return `${h}시간 ${m}분`
-        if (h > 0) return `${h}시간`
-        return `${m}분`
-    }
-    //처음 로그인 후 이 페이지에 처음 들어올 때, 한 번 강제 출차/정산 시도
-    useEffect(() => {
-        const alreadySettled = sessionStorage.getItem('parkingSettledOnLogin')
-        if (alreadySettled) return
 
-        const forceSettleOnFirstVisit = async () => {
-            try {
-                await settleParkingFee()
-            } catch (error) {
-                const status = error?.response?.status
-                const msg = error?.response?.data?.message
-
-                if (!(status === 400 && msg && msg.includes('활성'))) {
-                    console.warn('초기 자동 정산 시도 실패', status, msg || error)
-                }
-            } finally {
-                sessionStorage.setItem('parkingSettledOnLogin', '1')
-            }
-        }
-
-        forceSettleOnFirstVisit()
-    }, [])
-    // 프로필 편집
+    // 프로필 편집 관련
     const handleStartEditProfile = () => {
         setEditProfile(profile)
         setIsEditingProfile(true)
@@ -145,7 +104,7 @@ export default function BuildingSelectPage() {
         }))
     }
 
-    // 요약 정보 갱신
+    // 요약 정보 주기적 갱신
     useEffect(() => {
         let timerId
 
@@ -169,7 +128,7 @@ export default function BuildingSelectPage() {
         return () => clearInterval(timerId)
     }, [])
 
-    // 혼잡도 그래프 : 최근 24시간, 2시간 간격 표시
+    // 과거 점유율 그래프 데이터
     useEffect(() => {
         const fetchAnalysis = async () => {
             try {
@@ -223,7 +182,7 @@ export default function BuildingSelectPage() {
 
                 setAnalysisError('')
             } catch {
-                setAnalysisError('혼잡도 데이터를 불러올 수 없음')
+                setAnalysisError('점유율 데이터를 불러올 수 없음')
                 setAnalysisRangeText('')
             }
         }
@@ -234,213 +193,6 @@ export default function BuildingSelectPage() {
     const handleSelectBuilding = (buildingId) => {
         navigate(`/parking/${buildingId}`)
     }
-
-    // 즐겨찾기
-    const favoriteItems = favorites.map((favId) => {
-        const [bId, slotStr] = favId.split(':')
-        const slot = Number(slotStr)
-        const building = BUILDINGS.find((b) => b.id === bId)
-        const rawStatus = getSlotStatus(bId, slot) // true / false / null / undefined
-
-        let label = '상태 알 수 없음'
-        let badgeClass = 'bg-[#f3f4f6] text-slate-500'
-
-        if (rawStatus === true) {
-            label = '사용 중'
-            badgeClass = 'bg-[#fce8e6] text-[#c5221f]'
-        } else if (rawStatus === false) {
-            label = '비어있음'
-            badgeClass = 'bg-[#e6f4ea] text-[#137333]'
-        }
-
-        return {
-            id: favId,
-            buildingId: bId,
-            buildingName: building?.name || bId,
-            slot,
-            label,
-            badgeClass,
-            status: rawStatus ?? null,
-        }
-    })
-
-    // 주차 요금 로직
-    //0)초기화
-    useEffect(() => {
-        const initParkingState = async () => {
-            setParkingLoading(true)
-            setParkingError('')
-
-            try {
-                const data = await previewParkingFee()
-                // 현재 입차중
-                setParkingInfo(data)
-                setParkingStage('entered')
-                setLastUpdated(new Date())
-
-                const minutes = data.duration_minutes ?? 0
-                const h = Math.floor(minutes / 60)
-                const m = minutes % 60
-
-                setParkingStatusText(
-                    `현재 입차 중입니다.\n` +
-                    `현재까지 예상 요금은 ${data.expect_fee.toLocaleString()}원 입니다.\n` +
-                    `이용 시간 : ${h}시간 ${m}분`
-                )
-            } catch (error) {
-                const status = error?.response?.status
-                const msg = error?.response?.data?.message
-
-                //  에러면 그냥 입차 전 상태로 간주
-                if (status === 400 && msg && msg.includes('활성')) {
-                    setParkingStage('idle')
-                    setParkingInfo(null)
-                    setParkingStatusText(
-                        '현재 진행 중인 주차가 없습니다.\n' +
-                        '"입차하기" 버튼을 눌러 주차를 시작해 주세요.'
-                    )
-                } else {
-                    console.error('초기 주차 상태 조회 실패:', status, msg || error)
-                    setParkingError('현재 주차 정보를 불러오는 중 오류가 발생했습니다.')
-                }
-            } finally {
-                setParkingLoading(false)
-            }
-        }
-
-        initParkingState()
-    }, [])
-
-    // 1) 입차하기
-    const handleEnterParking = async () => {
-        setParkingLoading(true)
-        setParkingError('')
-
-        try {
-            await enterParking()
-
-            setParkingStage('entered')
-            setParkingInfo(null)
-            setLastUpdated(new Date())
-
-            setParkingStatusText(
-                `차량 번호: ${profile.carNumber}\n입차 완료!\n"예상 요금 확인" 버튼으로 현재까지의 요금을 확인할 수 있습니다.`,
-            )
-        } catch (error) {
-            console.error(
-                'enterParking 오류',
-                error.response?.status,
-                error.response?.data || error,
-            )
-            const msg =
-                error.response?.data?.message ||
-                '입차 처리 중 오류가 발생했습니다.'
-            setParkingError(msg)
-            setParkingStatusText('입차 처리에 실패했습니다.')
-            setParkingStage('idle')
-        } finally {
-            setParkingLoading(false)
-        }
-    }
-
-    // 2) 예상 요금 확인
-    const handlePreviewFee = async () => {
-        setParkingLoading(true)
-        setParkingError('')
-
-        try {
-            const data = await previewParkingFee()
-            setParkingInfo(data)
-            setLastUpdated(new Date())
-
-            const minutes = data.duration_minutes ?? 0
-            const h = Math.floor(minutes / 60)
-            const m = minutes % 60
-
-            setParkingStatusText(
-                `현재까지 예상 요금은 ${data.expect_fee.toLocaleString()}원 입니다.\n이용 시간 : ${h}시간 ${m}분`,
-            )
-        } catch (error) {
-            console.error(
-                'previewParkingFee 오류',
-                error.response?.status,
-                error.response?.data || error,
-            )
-            const msg =
-                error.response?.data?.message ||
-                '예상 요금 조회 중 오류가 발생했습니다.'
-            setParkingError(msg)
-        } finally {
-            setParkingLoading(false)
-        }
-    }
-
-    // 3) 출차하기 (백엔드 호출 X, 상태 안내만)
-    const handleExitClick = () => {
-        if (parkingStage !== 'entered' && parkingStage !== 'readyToPay') {
-            setParkingStatusText('아직 입차가 되지 않았습니다!')
-            return
-        }
-
-        setParkingStage('readyToPay')
-        setLastUpdated(new Date())
-        setParkingStatusText(
-            '출차 처리 완료!\n"결제하기" 버튼을 눌러 최종 정산을 진행해 주세요.',
-        )
-    }
-
-    // 4) 최종 정산 / 결제하기
-    const handleSettleFee = async () => {
-        setParkingLoading(true)
-        setParkingError('')
-
-        try {
-            const data = await settleParkingFee()
-
-            const enriched = {
-                ...data,
-                expect_fee: 0,
-            }
-
-            setParkingInfo(enriched)
-            setLastUpdated(new Date())
-
-            setParkingStatusText(
-                `결제가 완료되었습니다.\n총 ${formatDuration(
-                    data.duration_minutes,
-                )} 이용, 최종 요금 ${data.final_fee.toLocaleString()}원이 결제되었습니다.`,
-            )
-
-            setParkingStage('idle')
-        } catch (error) {
-            console.error(
-                'settleParkingFee 오류',
-                error.response?.status,
-                error.response?.data || error,
-            )
-            const msg =
-                error.response?.data?.message ||
-                '정산 처리 중 오류가 발생했습니다.'
-            setParkingError(msg)
-        } finally {
-            setParkingLoading(false)
-        }
-    }
-
-    const isActiveParking =
-        parkingStage === 'entered' || parkingStage === 'readyToPay'
-
-    const currentDurationMinutes = isActiveParking
-        ? parkingInfo?.duration_minutes ?? 0
-        : null
-
-    const durationText = isActiveParking
-        ? formatDuration(currentDurationMinutes)
-        : '현재 입차중이 아닙니다.'
-
-    const lastUpdatedText = lastUpdated
-        ? lastUpdated.toLocaleString()
-        : '-'
 
     return (
         <div className="min-h-screen flex flex-col bg-[#f5f7fb]">
@@ -522,12 +274,12 @@ export default function BuildingSelectPage() {
                             )}
                         </div>
 
-                        {/* 혼잡도 그래프 */}
+                        {/* 점유율 그래프 */}
                         <section className="bg-white rounded-2xl shadow-md p-4">
                             <div className="flex items-center justify-between mb-4">
                                 <div>
                                     <h3 className="text-sm font-semibold text-slate-800">
-                                        과거 혼잡도
+                                        과거 점유율
                                     </h3>
                                     {analysisRangeText && (
                                         <p className="mt-0.5 text-[11px] text-slate-500">
@@ -538,7 +290,9 @@ export default function BuildingSelectPage() {
                                 <select
                                     className="border border-slate-300 rounded-md text-xs px-2 py-1 bg-white"
                                     value={analysisBuilding}
-                                    onChange={(e) => setAnalysisBuilding(e.target.value)}
+                                    onChange={(e) =>
+                                        setAnalysisBuilding(e.target.value)
+                                    }
                                 >
                                     {BUILDINGS.map((b) => (
                                         <option key={b.id} value={b.id}>
@@ -569,16 +323,27 @@ export default function BuildingSelectPage() {
                                             <XAxis
                                                 dataKey="index"
                                                 type="number"
-                                                domain={[0, Math.max(analysisData.length - 1, 0)]}
+                                                domain={[
+                                                    0,
+                                                    Math.max(
+                                                        analysisData.length - 1,
+                                                        0,
+                                                    ),
+                                                ]}
                                                 allowDecimals={false}
                                                 tickLine={false}
                                                 tick={{ fontSize: 10 }}
                                                 ticks={[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22].filter(
-                                                    (v) => v < analysisData.length
+                                                    (v) =>
+                                                        v <
+                                                        analysisData.length,
                                                 )}
                                                 tickFormatter={(value) => {
-                                                    const item = analysisData[value]
-                                                    return item ? item.timeLabel : ''
+                                                    const item =
+                                                        analysisData[value]
+                                                    return item
+                                                        ? item.timeLabel
+                                                        : ''
                                                 }}
                                             />
                                             <YAxis
@@ -588,23 +353,43 @@ export default function BuildingSelectPage() {
                                                 unit="%"
                                             />
                                             <Tooltip
-                                                content={({ active, payload }) => {
-                                                    if (!active || !payload || !payload.length) return null
-                                                    const point = payload[0].payload
-                                                    // point = { dateLabel, timeLabel, percent, ... }
+                                                content={({
+                                                              active,
+                                                              payload,
+                                                          }) => {
+                                                    if (
+                                                        !active ||
+                                                        !payload ||
+                                                        !payload.length
+                                                    )
+                                                        return null
+                                                    const point =
+                                                        payload[0].payload
                                                     return (
                                                         <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-[12px] text-slate-800">
-                                                            <div>{point.dateLabel}</div>
-                                                            <div>{point.timeLabel}</div>
+                                                            <div>
+                                                                {
+                                                                    point.dateLabel
+                                                                }
+                                                            </div>
+                                                            <div>
+                                                                {
+                                                                    point.timeLabel
+                                                                }
+                                                            </div>
                                                             <div className="mt-1 text-[#2563eb] font-semibold">
-                                                                혼잡도 {point.percent} %
+                                                                점유율{' '}
+                                                                {
+                                                                    point.percent
+                                                                }{' '}
+                                                                %
                                                             </div>
                                                         </div>
                                                     )
                                                 }}
                                             />
                                             <Line
-                                                 type="monotone"
+                                                type="monotone"
                                                 dataKey="percent"
                                                 stroke="#174ea6"
                                                 strokeWidth={2}
@@ -642,7 +427,9 @@ export default function BuildingSelectPage() {
                                         <div className="w-12 h-12 rounded-full bg-[#e5e7eb] overflow-hidden flex items-center justify-center text-[11px] text-slate-500">
                                             {editProfile.profileImage ? (
                                                 <img
-                                                    src={editProfile.profileImage}
+                                                    src={
+                                                        editProfile.profileImage
+                                                    }
                                                     alt={editProfile.name}
                                                     className="w-full h-full object-cover"
                                                 />
@@ -822,174 +609,21 @@ export default function BuildingSelectPage() {
                             )}
                         </div>
 
-                        {/* 현재 내 주차 이용 현황 */}
-                        <div className="bg-white rounded-2xl shadow-md p-4">
-                            <h3 className="text-sm font-semibold text-slate-800 mb-2">
-                                현재 내 주차 이용 현황
-                            </h3>
+                        {/* 내 주차 현황 (주차비 로직 포함 컴포넌트) */}
+                        <ParkingUsagePanel
+                            profileCarNumber={profile.carNumber}
+                        />
 
-                            {parkingStatusText && (
-                                <p className="text-xs text-slate-700 mb-2 whitespace-pre-line">
-                                    {parkingStatusText}
-                                </p>
-                            )}
-
-                            {parkingError && (
-                                <p className="text-xs text-red-500 mb-2">
-                                    {parkingError}
-                                </p>
-                            )}
-
-                            {/* 서버 응답 요약 */}
-                            {parkingInfo && (
-                                <div className="mt-2 mb-3 text-xs text-slate-700 space-y-1">
-                                    {'expect_fee' in parkingInfo && (
-                                        <div>
-                                            예상 요금:{' '}
-                                            {parkingInfo.expect_fee.toLocaleString()}
-                                            원 (
-                                            {parkingInfo.duration_minutes}
-                                            분 기준)
-                                        </div>
-                                    )}
-                                    {'final_fee' in parkingInfo && (
-                                        <>
-                                            <div>
-                                                입차 시각:{' '}
-                                                {parkingInfo.entry_time}
-                                            </div>
-                                            <div>
-                                                출차 시각:{' '}
-                                                {parkingInfo.exit_time}
-                                            </div>
-                                            <div>
-                                                최종 요금:{' '}
-                                                {parkingInfo.final_fee.toLocaleString()}
-                                                원 (
-                                                {
-                                                    parkingInfo
-                                                        .duration_minutes
-                                                }
-                                                분 이용)
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* 주차 요금 계산 */}
-                            <div className="flex flex-col gap-2 mt-2">
-                                {parkingStage === 'idle' && (
-                                    <button
-                                        type="button"
-                                        onClick={handleEnterParking}
-                                        disabled={parkingLoading || parkingStage !== 'idle'}
-                                        className="flex-1 rounded-lg bg-[#2563eb] text-white text-xs py-2 hover:bg-[#1d4ed8] disabled:opacity-60"
-                                    >
-                                        {parkingLoading && parkingStage === 'idle' ? '처리 중...' : '입차하기'}
-                                    </button>
-                                )}
-
-                                {parkingStage === 'entered' && (
-                                    <>
-                                        <button
-                                            type="button"
-                                            onClick={handlePreviewFee}
-                                            disabled={parkingLoading || parkingStage === 'idle'}
-                                            className="flex-1 rounded-lg border border-slate-300 bg-white text-xs py-2 text-slate-700 hover:bg-[#f9fafb] disabled:opacity-60"
-                                        >
-                                            예상 요금 확인
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={handleExitClick}
-                                            disabled={parkingLoading || parkingStage !== 'entered'}
-                                            className="flex-1 rounded-lg bg-[#2563eb] text-white text-xs py-2 hover:bg-[#1d4ed8] disabled:opacity-60"
-                                        >
-                                            출차하기
-                                        </button>
-                                    </>
-                                )}
-
-                                {parkingStage === 'readyToPay' && (
-                                    <button
-                                        type="button"
-                                        onClick={handleSettleFee}
-                                        disabled={parkingLoading || parkingStage !== 'readyToPay'}
-                                        className="w-full rounded-lg bg-[#ef4444] text-white text-xs py-2 hover:bg-[#dc2626] disabled:opacity-60"
-                                    >
-                                        {parkingLoading && parkingStage === 'readyToPay'
-                                            ? '결제 처리 중...'
-                                            : '결제하기'}
-                                    </button>
-                                )}
-                            </div>
-
-                            <div className="mt-3 border-t pt-2 text-[11px] text-slate-500 space-y-1 border-slate-200">
-                                <div>내 차량 번호: {profile.carNumber}</div>
-                                <div>현재 주차중 시간 : {durationText}</div>
-                                <div>마지막 갱신: {lastUpdatedText}</div>
-                            </div>
-                        </div>
-
-                        {/* 내 선호 자리 */}
-                        <div className="bg-white rounded-2xl shadow-md p-4">
-                            <h3 className="text-sm font-semibold text-slate-800 mb-3">
-                                내 선호 자리
-                            </h3>
-
-                            {favoriteItems.length === 0 ? (
-                                <p className="text-xs text-slate-500">
-                                    즐겨찾기한 좌석이 없음
-                                </p>
-                            ) : (
-                                <div className="space-y-2 text-sm">
-                                    {favoriteItems.map((item) => (
-                                        <div
-                                            key={item.id}
-                                            className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-2"
-                                        >
-                                            <span>
-                                                {item.buildingName}{' '}
-                                                {item.slot}번
-                                            </span>
-
-                                            {item.status === null ? (
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        navigate(
-                                                            `/parking/${item.buildingId}`,
-                                                        )
-                                                    }
-                                                    className="text-xs px-2 py-0.5 rounded-lg border border-slate-300 text-slate-600 hover:bg-[#eef2ff] transition"
-                                                >
-                                                    점유 여부 보러가기
-                                                </button>
-                                            ) : (
-                                                <span
-                                                    className={`text-xs px-2 py-0.5 rounded-full ${item.badgeClass}`}
-                                                >
-                                                    {item.label}
-                                                </span>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            <button
-                                type="button"
-                                className="mt-3 w-full rounded-lg border border-dashed border-slate-300 py-2 text-sm text-slate-500 hover:bg-[#f9fafb] transition"
-                                onClick={() =>
-                                    navigate(
-                                        `/parking/${profile.favoriteBuilding}`,
-                                    )
-                                }
-                            >
-                                자리 추가하러 가기
-                            </button>
-                        </div>
+                        {/* 내 선호 자리 (공용 컴포넌트, global 모드) */}
+                        <FavoriteSlotsPanel
+                            mode="global"
+                            favorites={favorites}
+                            buildings={BUILDINGS}
+                            profileFavoriteBuilding={profile.favoriteBuilding}
+                            onNavigateToBuilding={(bId) =>
+                                navigate(`/parking/${bId}`)
+                            }
+                        />
                     </aside>
                 </div>
             </main>

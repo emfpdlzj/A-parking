@@ -1,9 +1,12 @@
+// ParkingStatusPage.jsx
 import React, { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Header from '../components/Header'
 import { useParkingSocket } from '../hooks/useParkingSocket'
 import { getFavsByBuilding, toggleFav } from '../utils/favStorage'
 import ParkingLotLayout from '../components/ParkingLotLayout'
+import ParkingUsagePanel from '../components/ParkingUsagePanel'
+import FavoriteSlotsPanel from '../components/FavoriteSlotsPanel'
 
 const BUILDING_NAMES = {
     paldal: '팔달관',
@@ -52,9 +55,7 @@ export default function ParkingStatusPage() {
         const values = Object.values(slots)
         const occupied = values.filter((v) => v === 1).length
         const r =
-            totalSlots > 0
-                ? Math.round((occupied / totalSlots) * 100)
-                : 0
+            totalSlots > 0 ? Math.round((occupied / totalSlots) * 100) : 0
         return { occupiedCount: occupied, rate: r }
     }, [slots, totalSlots])
 
@@ -66,6 +67,17 @@ export default function ParkingStatusPage() {
         if (occ === 0) return '이용 가능'
         return '정보 없음'
     }
+
+    // 프로필(차량 번호만 필요)
+    const [profile] = useState(() => {
+        try {
+            const raw = localStorage.getItem('profile')
+            if (raw) return JSON.parse(raw)
+        } catch {
+            //
+        }
+        return { carNumber: '12가3456' }
+    })
 
     return (
         <div className="min-h-screen flex flex-col bg-[#f5f7fb]">
@@ -93,6 +105,7 @@ export default function ParkingStatusPage() {
 
                 <div className="mt-4 grid grid-cols-[minmax(0,1fr)_320px] gap-6">
                     <section className="space-y-4">
+                        {/* 상단 점유율 바 */}
                         <section className="bg-white rounded-2xl shadow-md p-4">
                             <p className="text-xs text-slate-600 mb-1">
                                 {buildingName} 주차장 현황
@@ -113,6 +126,7 @@ export default function ParkingStatusPage() {
                             )}
                         </section>
 
+                        {/* 주차칸 배치도 */}
                         <section className="bg-white rounded-2xl shadow-md p-4">
                             <ParkingLotLayout
                                 buildingId={buildingId}
@@ -124,16 +138,14 @@ export default function ParkingStatusPage() {
                         </section>
                     </section>
 
+                    {/* 오른쪽 패널 */}
                     <aside className="flex flex-col gap-4">
-                        <div className="bg-white rounded-2xl shadow-md p-4">
-                            <h3 className="text-sm font-semibold text-slate-800 mb-2">
-                                현재 내 주차 이용현황
-                            </h3>
-                            <p className="text-xs text-slate-500">
-                                실제 요금 계산 로직과 연동은 이후 단계에서 구현 예정입니다.
-                            </p>
-                        </div>
+                        {/* 내 주차 현황 (주차 요금 로직 포함 컴포넌트) */}
+                        <ParkingUsagePanel
+                            profileCarNumber={profile.carNumber}
+                        />
 
+                        {/* 선택한 자리 정보 */}
                         <div className="bg-white rounded-2xl shadow-md p-4">
                             <h3 className="text-sm font-semibold text-slate-800 mb-2">
                                 선택한 자리
@@ -147,12 +159,16 @@ export default function ParkingStatusPage() {
                                         </div>
                                         <div className="flex justify-between">
                                             <span>상태</span>
-                                            <span>{getSlotStateText(selectedSlot)}</span>
+                                            <span>
+                                                {getSlotStateText(selectedSlot)}
+                                            </span>
                                         </div>
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={handleToggleFavoriteForSelected}
+                                        onClick={
+                                            handleToggleFavoriteForSelected
+                                        }
                                         className="mt-3 w-full rounded-lg bg-[#f3f4f6] py-2 text-xs text-slate-700 hover:bg-[#e5e7eb] transition"
                                     >
                                         {favorites.includes(selectedSlot)
@@ -167,44 +183,12 @@ export default function ParkingStatusPage() {
                             )}
                         </div>
 
-                        <div className="bg-white rounded-2xl shadow-md p-4">
-                            <h3 className="text-sm font-semibold text-slate-800 mb-2">
-                                내 선호 자리
-                            </h3>
-                            {favorites.length === 0 ? (
-                                <p className="text-sm text-slate-500">
-                                    즐겨찾기한 자리가 없음
-                                </p>
-                            ) : (
-                                <div className="space-y-2 text-sm">
-                                    {favorites.map((slotId) => {
-                                        const occ = slots[slotId]
-                                        const isOccupied = occ === 1
-
-                                        return (
-                                            <div
-                                                key={slotId}
-                                                className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-2"
-                                            >
-                                                <span>
-                                                    {buildingName} {slotId}번
-                                                </span>
-                                                <span
-                                                    className={[
-                                                        'text-xs px-2 py-0.5 rounded-full',
-                                                        isOccupied
-                                                            ? 'bg-[#fce8e6] text-[#c5221f]'
-                                                            : 'bg-[#e6f4ea] text-[#137333]',
-                                                    ].join(' ')}
-                                                >
-                                                    {isOccupied ? '사용 중' : '비어있음'}
-                                                </span>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            )}
-                        </div>
+                        {/* 내 선호 자리 (분리된 컴포넌트) */}
+                        <FavoriteSlotsPanel
+                            buildingName={buildingName}
+                            favorites={favorites}
+                            slots={slots}
+                        />
                     </aside>
                 </div>
             </main>
