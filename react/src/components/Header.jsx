@@ -1,17 +1,19 @@
 import React from 'react'
-import { Link, useNavigate } from 'react-router-dom' //라우팅 관련
+import { Link, useNavigate, useLocation } from 'react-router-dom' // 라우팅 관련
 import { useAuth } from '../hooks/useAuth'
 import parkingicon from '../assets/icons/parking.svg'
-import { settleParkingFee } from '../api/parking'   // ✅ 추가: 주차 정산 API
 
 export default function Header() {
     const { accessToken, member, logout } = useAuth()
     const navigate = useNavigate()
+    const location = useLocation()
+
+    const isLoginPage = location.pathname === '/login'
 
     // 로그아웃 버튼 클릭 핸들러
     const handleLogout = async () => {
-            logout()
-            navigate('/login')
+        logout()
+        navigate('/login')
     }
 
     return (
@@ -28,8 +30,7 @@ export default function Header() {
             </div>
 
             <div className="flex items-center gap-4">
-                {accessToken ? (
-                    // 로그인된 상태 표시
+                {accessToken && !isLoginPage ? (
                     <>
                         <span className="text-sm text-slate-700">
                             {member?.name ? `${member.name} 님` : '로그인됨'}
@@ -43,7 +44,6 @@ export default function Header() {
                         </button>
                     </>
                 ) : (
-                    // 비로그인 상태 표시
                     <Link
                         to="/login"
                         className="px-4 py-1.5 text-sm font-medium rounded-full border border-[#0b57d0] text-[#0b57d0] bg-white hover:bg-[#e5efff] transition"

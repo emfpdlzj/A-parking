@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { loginApi } from '../api/auth' // 로그인 API 함수
-import { useAuth } from '../hooks/useAuth' // 인증
-import parkingIcon from '../assets/icons/parking.svg' //icon image
-
-const DEMO_ID = 'user' // 데모 계정 정보 상수
-const DEMO_PW = 'pass'
+import { loginApi } from '../api/auth'
+import { useAuth } from '../hooks/useAuth'
+import Header from '../components/Header'
 
 export default function LoginPage() {
     const [id, setId] = useState('')
@@ -13,66 +10,40 @@ export default function LoginPage() {
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
-    const { login, isAuthenticated } = useAuth() //인증 훅
-    const navigate = useNavigate() //페이지 이동 훅
+    const { login, isAuthenticated } = useAuth()
+    const navigate = useNavigate()
 
     // 이미 로그인된 경우 리다이렉트 처리
     useEffect(() => {
         if (isAuthenticated) {
-            navigate('/') // 메인 페이지로 이동
+            navigate('/')
         }
     }, [isAuthenticated, navigate])
 
-    // 폼 제출 핸들러
     const handleSubmit = async (e) => {
-        e.preventDefault() // 기본 폼 제출 동작 방지
-        setError('') // 기존 에러 메시지 초기화
-        setLoading(true) // 로딩 상태 활성화
+        e.preventDefault()
+        setError('')
+        setLoading(true)
 
         try {
-            const data = await loginApi(id, pw) // 로그인 API 호출
-            login(data.accessToken, data.member) // 인증 컨텍스트 로그인 처리
-            navigate('/') // 로그인 성공 후 메인 페이지로 이동
+            const data = await loginApi(id, pw)
+            login(data.accessToken, data.member)
+            navigate('/')
         } catch (err) {
-            // 에러 응답 객체 확인
             if (err.response && err.response.status === 401) {
-                setError('아이디 또는 비밀번호가 올바르지 않음') // 인증 실패 에러 메시지 설정
+                setError('아이디 또는 비밀번호가 올바르지 않음')
             } else {
-                setError('로그인 중 오류 발생') // 일반 에러 메시지 설정
+                setError('로그인 중 오류 발생')
             }
         } finally {
-            setLoading(false) // 로딩 상태 비활성화
+            setLoading(false)
         }
     }
 
-
-    const handleFillDemo = () => {     // 데모 계정 버튼
-        setId(DEMO_ID) // ID 입력값을 데모 계정 ID로 설정
-        setPw(DEMO_PW) // 비밀번호 입력값을 데모 계정 비밀번호로 설정
-        setError('') // 에러 메시지 초기화
-    }
-
-    //css
     return (
         <div className="min-h-screen flex flex-col bg-[#f5f7fb]">
-            <header className="w-full flex items-center justify-between px-10 py-4 bg-white shadow-sm">
-                <div className="flex items-center gap-2">
-                    <img
-                        src={parkingIcon}
-                        alt="주차 아이콘"
-                        className="w-6 h-6 object-contain"
-                    />
-                    <span className="text-sm font-semibold text-slate-800">
-            주차관리
-          </span>
-                </div>
-                <button
-                    type="button"
-                    className="px-4 py-1.5 text-sm font-medium border border-[#174ea6] text-white bg-[#174ea6] hover:bg-[#1450c8] rounded-lg transition"
-                >
-                    로그인
-                </button>
-            </header>
+            {/* 공통 헤더 */}
+            <Header />
 
             <main className="flex-1 flex items-center justify-center px-4">
                 <div className="w-full max-w-md">
@@ -119,14 +90,6 @@ export default function LoginPage() {
                                 disabled={loading}
                             >
                                 {loading ? '로그인 처리 중' : '로그인'}
-                            </button>
-
-                            <button
-                                type="button"
-                                className="w-full rounded-md bg-[#f3f4f6] text-slate-700 text-sm font-medium py-2.5 hover:bg-[#e5e7eb] transition"
-                                onClick={handleFillDemo}
-                            >
-                                데모 계정
                             </button>
                         </form>
                     </section>
