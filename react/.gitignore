@@ -1,5 +1,6 @@
 # Node 모듈 디렉터리
-../node_modules/
+node_modules/
+*/node_modules/
 
 # 빌드 결과물
 dist/

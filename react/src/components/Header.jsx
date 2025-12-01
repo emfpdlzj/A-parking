@@ -1,16 +1,19 @@
 import React from 'react'
-import { Link, useNavigate } from 'react-router-dom' //라우팅 관련
+import { Link, useNavigate, useLocation } from 'react-router-dom' // 라우팅 관련
 import { useAuth } from '../hooks/useAuth'
 import parkingicon from '../assets/icons/parking.svg'
 
 export default function Header() {
     const { accessToken, member, logout } = useAuth()
     const navigate = useNavigate()
+    const location = useLocation()
+
+    const isLoginPage = location.pathname === '/login'
 
     // 로그아웃 버튼 클릭 핸들러
-    const handleLogout = () => {
-        logout() // 인증 정보 초기화
-        navigate('/login') // 로그인 페이지로 이동
+    const handleLogout = async () => {
+        logout()
+        navigate('/login')
     }
 
     return (
@@ -22,17 +25,16 @@ export default function Header() {
                     className="w-6 h-6 object-contain"
                 />
                 <span className="text-sm font-semibold text-slate-800">
-          AJOU UNIV. 주차 관리 시스템
-        </span>
+                    AJOU UNIV. 주차 관리 시스템
+                </span>
             </div>
 
             <div className="flex items-center gap-4">
-                {accessToken ? (
-                    // 로그인된 상태 표시
+                {accessToken && !isLoginPage ? (
                     <>
-            <span className="text-sm text-slate-700">
-              {member?.name ? `${member.name} 님` : '로그인됨'}
-            </span>
+                        <span className="text-sm text-slate-700">
+                            {member?.name ? `${member.name} 님` : '로그인됨'}
+                        </span>
                         <button
                             type="button"
                             className="px-4 py-1.5 text-sm font-medium border border-[#0b57d0] text-white bg-[#0b57d0] hover:bg-[#174ea6] rounded-lg transition"
@@ -42,7 +44,6 @@ export default function Header() {
                         </button>
                     </>
                 ) : (
-                    // 비로그인 상태 표시
                     <Link
                         to="/login"
                         className="px-4 py-1.5 text-sm font-medium rounded-full border border-[#0b57d0] text-[#0b57d0] bg-white hover:bg-[#e5efff] transition"
