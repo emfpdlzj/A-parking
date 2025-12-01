@@ -1,9 +1,9 @@
-// BuildingSelectPage.jsx
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
 import ParkingUsagePanel from '../components/ParkingUsagePanel'
 import FavoriteSlotsPanel from '../components/FavoriteSlotsPanel'
+import ProfilePanel from '../components/ProfilePanel'
 import { getParkingSummary, getAnalysis } from '../api/parking'
 import {
     LineChart,
@@ -58,7 +58,6 @@ export default function BuildingSelectPage() {
     const [isEditingProfile, setIsEditingProfile] = useState(false)
     const [editProfile, setEditProfile] = useState(profile)
 
-    // 프로필 편집 관련
     const handleStartEditProfile = () => {
         setEditProfile(profile)
         setIsEditingProfile(true)
@@ -104,7 +103,6 @@ export default function BuildingSelectPage() {
         }))
     }
 
-    // 요약 정보 주기적 갱신
     useEffect(() => {
         let timerId
 
@@ -128,7 +126,6 @@ export default function BuildingSelectPage() {
         return () => clearInterval(timerId)
     }, [])
 
-    // 과거 점유율 그래프 데이터
     useEffect(() => {
         const fetchAnalysis = async () => {
             try {
@@ -200,9 +197,7 @@ export default function BuildingSelectPage() {
 
             <main className="flex-1 px-10 py-6">
                 <div className="flex gap-6">
-                    {/* 왼쪽 영역 */}
                     <section className="flex-[2] flex flex-col gap-6">
-                        {/* 건물 선택 카드 */}
                         <div>
                             <h2 className="text-sm font-semibold text-slate-800 mb-3">
                                 건물 선택
@@ -274,7 +269,6 @@ export default function BuildingSelectPage() {
                             )}
                         </div>
 
-                        {/* 점유율 그래프 */}
                         <section className="bg-white rounded-2xl shadow-md p-4">
                             <div className="flex items-center justify-between mb-4">
                                 <div>
@@ -402,219 +396,24 @@ export default function BuildingSelectPage() {
                         </section>
                     </section>
 
-                    {/* 오른쪽 패널 */}
                     <aside className="w-[340px] shrink-0 flex flex-col gap-4">
-                        {/* 내 정보 */}
-                        <div className="bg-white rounded-2xl shadow-md p-4">
-                            <div className="flex items-center justify-between mb-3">
-                                <h3 className="text-sm font-semibold text-slate-800">
-                                    내 정보
-                                </h3>
-                                {!isEditingProfile && (
-                                    <button
-                                        type="button"
-                                        onClick={handleStartEditProfile}
-                                        className="text-[11px] px-2 py-1 rounded-md bg-[#f3f4f6] text-slate-600 hover:bg-[#e5e7eb] transition"
-                                    >
-                                        수정
-                                    </button>
-                                )}
-                            </div>
+                        <ProfilePanel
+                            profile={profile}
+                            isEditing={isEditingProfile}
+                            editProfile={editProfile}
+                            buildings={BUILDINGS}
+                            onStartEdit={handleStartEditProfile}
+                            onChangeField={handleChangeProfileField}
+                            onSave={handleSaveProfile}
+                            onCancel={handleCancelProfile}
+                            onChangeImage={handleChangeProfileImage}
+                            onClearImage={handleClearProfileImage}
+                        />
 
-                            {isEditingProfile ? (
-                                <div className="space-y-2 text-sm text-slate-700">
-                                    <div className="flex items-center gap-4 mb-3">
-                                        <div className="w-12 h-12 rounded-full bg-[#e5e7eb] overflow-hidden flex items-center justify-center text-[11px] text-slate-500">
-                                            {editProfile.profileImage ? (
-                                                <img
-                                                    src={
-                                                        editProfile.profileImage
-                                                    }
-                                                    alt={editProfile.name}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            ) : (
-                                                <span>사진</span>
-                                            )}
-                                        </div>
-
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-[11px] text-slate-500">
-                                                프로필 사진
-                                            </span>
-                                            <div className="flex items-center gap-2">
-                                                <label className="inline-flex items-center justify-center px-3 py-1.5 rounded-md bg-[#f3f4f6] text-xs text-slate-700 cursor-pointer hover:bg-[#e5e7eb]">
-                                                    이미지 선택
-                                                    <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        onChange={(e) =>
-                                                            handleChangeProfileImage(
-                                                                e.target
-                                                                    .files?.[0],
-                                                            )
-                                                        }
-                                                        className="hidden"
-                                                    />
-                                                </label>
-
-                                                {editProfile.profileImage && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={
-                                                            handleClearProfileImage
-                                                        }
-                                                        className="inline-flex items-center justify-center px-3 py-1.5 rounded-md bg-[#f3f4f6] text-xs text-slate-700 cursor-pointer hover:bg-[#e5e7eb]"
-                                                    >
-                                                        사진 삭제
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex justify-between items-center gap-4">
-                                        <span className="whitespace-nowrap">
-                                            이름
-                                        </span>
-                                        <input
-                                            type="text"
-                                            value={editProfile.name}
-                                            onChange={(e) =>
-                                                handleChangeProfileField(
-                                                    'name',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-sm"
-                                        />
-                                    </div>
-                                    <div className="flex justify-between items-center gap-4">
-                                        <span className="whitespace-nowrap">
-                                            학번
-                                        </span>
-                                        <input
-                                            type="text"
-                                            value={editProfile.studentId}
-                                            onChange={(e) =>
-                                                handleChangeProfileField(
-                                                    'studentId',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-sm"
-                                        />
-                                    </div>
-                                    <div className="flex justify-between items-center gap-4">
-                                        <span className="whitespace-nowrap">
-                                            즐겨찾는 건물
-                                        </span>
-                                        <select
-                                            value={
-                                                editProfile.favoriteBuilding
-                                            }
-                                            onChange={(e) =>
-                                                handleChangeProfileField(
-                                                    'favoriteBuilding',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-sm bg-white"
-                                        >
-                                            {BUILDINGS.map((b) => (
-                                                <option
-                                                    key={b.id}
-                                                    value={b.id}
-                                                >
-                                                    {b.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="flex justify-between items-center gap-4">
-                                        <span className="whitespace-nowrap">
-                                            차량 번호
-                                        </span>
-                                        <input
-                                            type="text"
-                                            value={editProfile.carNumber}
-                                            disabled
-                                            className="flex-1 border border-slate-200 bg-[#f9fafb] text-slate-500 rounded-md px-2 py-1 text-sm cursor-not-allowed"
-                                        />
-                                    </div>
-
-                                    <div className="mt-3 flex gap-2 justify-end">
-                                        <button
-                                            type="button"
-                                            onClick={handleCancelProfile}
-                                            className="px-3 py-1.5 text-xs rounded-md border border-slate-300 text-slate-600 hover:bg-[#f9fafb] transition"
-                                        >
-                                            취소
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={handleSaveProfile}
-                                            className="px-3 py-1.5 text-xs rounded-md bg-[#174ea6] text-white hover:bg-[#1450c8] transition"
-                                        >
-                                            저장
-                                        </button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="space-y-1 text-sm text-slate-700">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="w-12 h-12 rounded-full bg-[#e5e7eb] overflow-hidden flex items-center justify-center text-[11px] text-slate-500">
-                                            {profile.profileImage ? (
-                                                <img
-                                                    src={profile.profileImage}
-                                                    alt={profile.name}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            ) : (
-                                                <span>사진</span>
-                                            )}
-                                        </div>
-                                        <div className="text-sm">
-                                            <div className="font-semibold text-slate-800">
-                                                {profile.name}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex justify-between">
-                                        <span>이름</span>
-                                        <span>{profile.name}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span>학번</span>
-                                        <span>{profile.studentId}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span>차량 번호</span>
-                                        <span>{profile.carNumber}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span>즐겨찾는 건물</span>
-                                        <span>
-                                            {
-                                                BUILDINGS.find(
-                                                    (b) =>
-                                                        b.id ===
-                                                        profile.favoriteBuilding,
-                                                )?.name
-                                            }
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* 내 주차 현황 (주차비 로직 포함 컴포넌트) */}
                         <ParkingUsagePanel
                             profileCarNumber={profile.carNumber}
                         />
 
-                        {/* 내 선호 자리 (공용 컴포넌트, global 모드) */}
                         <FavoriteSlotsPanel
                             mode="global"
                             favorites={favorites}
