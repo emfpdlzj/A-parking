@@ -12,7 +12,8 @@ export function useParkingSocket(buildingId) {
     const wsRef = useRef(null)
 
     // 언제 호출되든 현재 건물 채널 WebSocket을 확실하게 끊는 함수
-    const closeSocket = () => {
+    const closeSocket = (reason) => {
+        const ws= wsRef.current
         if (!wsRef.current) return
 
         console.log(
@@ -20,8 +21,11 @@ export function useParkingSocket(buildingId) {
         )
 
         try {
-            // 상태와 상관없이 종료 시도
-            wsRef.current.close(1000, 'manual/cleanup close')
+            // 실제로 열려 있을 때만 정상 코드 (1000)로 종료함.
+            if(ws.readyState === WebSocket.OPEN){
+                ws.close(1000, reason ?? '페이지 이동/언마운트')
+            }
+            //알아서 종료
         } catch (e) {
             console.error('웹소켓 수동 종료 중 오류', e)
         } finally {
