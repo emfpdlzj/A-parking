@@ -41,7 +41,7 @@ export default function Header() {
                         </span>
                         <button
                             type="button"
-                            className="px-4 py-1.5 text-sm font-medium border border-[#0b57d0] text-white bg-[#0b57d0] hover:bg-[#174ea6] rounded-lg transition flex items-center gap-2"
+                            className="px-3 py-1.5 text-sm font-medium border border-[#0b57d0] text-white bg-[#0b57d0] hover:bg-[#174ea6] rounded-lg transition flex items-center gap-2"
                             onClick={handleLogout}
                         >
                             <img
