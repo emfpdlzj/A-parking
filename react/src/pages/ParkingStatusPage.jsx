@@ -156,7 +156,9 @@ export default function ParkingStatusPage() {
                                 slotsMap={slotsMap}
                                 favorites={favorites}
                                 selectedSlot={selectedSlot}
-                                onSlotClick={setSelectedSlot}
+                                onSlotClick={(slotId) => {
+                                    setSelectedSlot((prev) => (prev === slotId ? null : slotId))
+                                }}
                             />
                         </section>
                     </section>

@@ -80,6 +80,7 @@ export default function ParkingLotLayout({
                                              slotsMap = {},
                                              favorites = [],
                                              onSlotClick,
+                                             selectedSlot,
                                          }) {
     const currentId = buildingId || 'paldal'
     const layout = PARKING_LAYOUTS[currentId] ?? PARKING_LAYOUTS.paldal
@@ -111,6 +112,7 @@ export default function ParkingLotLayout({
                 const slot = slotsMap[slotId]
                 const occupied = !!slot?.occupied
                 const isFav = favoriteSet.has(slotId)
+                const isSelected = selectedSlot === slotId; // 선택 여부 확인
 
                 let cls =
                     'bg-[#dcfce7] border-[#22c55e] text-[#166534]'
@@ -121,14 +123,19 @@ export default function ParkingLotLayout({
                     cls = 'bg-[#fef9c3] border-[#facc15] text-[#854d0e]'
                 }
 
+                const selectedStyle = isSelected //선택된 경우 효과
+                    ? 'border-4 !border-blue-600 z-50 scale-110 shadow-xl font-bold'
+                    : 'hover:opacity-80';
+
                 cells.push(
                     <button
                         key={slotId}
                         type="button"
                         onClick={() => onSlotClick && onSlotClick(slotId)}
                         className={
-                            'rounded-[4px] border flex items-center justify-center text-[14px] select-none transition ' +
-                            cls
+                            `relative rounded-[4px] border flex items-center justify-center text-[14px]
+                                select-none transition-all duration-200 ease-in-out
+                                ${cls} ${selectedStyle}`
                         }
                         style={{
                             width: `${cellWidth}px`,
