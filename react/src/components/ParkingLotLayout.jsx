@@ -21,18 +21,18 @@ const PARKING_LAYOUTS = {
     library: {
         name: '도서관',
         buildingRect: {left: '6%', top: '18%', width: '8%', height: '70%'},
-        entranceRect: {left: '52%', top: '74%', width: '6.5%', height: '6%'},
+        entranceRect: {left: '47%', top: '74%', width: '6.5%', height: '6%'},
         // 위쪽 왼쪽/오른쪽, 아래쪽 왼쪽/오른쪽 - 4개 블록
         clusters: [
             // 위 왼쪽
-            {id: 'lib-top-left', left: '24%', top: '18%', rows: 2, cols: 8, startId:1},
+            {id: 'lib-top-left', left: '19%', top: '18%', rows: 2, cols: 8, startId:1},
             // 위 오른쪽
-            {id: 'lib-top-right', left: '60%', top: '18%', rows: 2, cols: 8, startId:17},
-            {id: 'lib-top-right2', left: '90%', top: '18%', rows: 2, cols: 3, startId:33},
+            {id: 'lib-top-right', left: '55%', top: '18%', rows: 2, cols: 8, startId:17},
+            {id: 'lib-top-right2', left: '85%', top: '18%', rows: 2, cols: 3, startId:33},
             // 아래 왼쪽
-            {id: 'lib-bottom-left', left: '24%', top: '52%', rows: 2, cols: 8,startId:39},
+            {id: 'lib-bottom-left', left: '19%', top: '52%', rows: 2, cols: 8,startId:39},
             // 아래 오른쪽
-            {id: 'lib-bottom-right', left: '60%', top: '52%', rows: 2, cols: 8, startId:55  },
+            {id: 'lib-bottom-right', left: '55%', top: '52%', rows: 2, cols: 8, startId:55  },
         ],
     },
 
@@ -238,7 +238,7 @@ export default function ParkingLotLayout({
 
                         <div
                             ref={scrollRef}
-                            className="relative w-full h-[600px] rounded-2xl border border-slate-300 bg-[#f9fafb] overflow-x-scroll overflow-y-scroll"
+                            className="relative w-full h-[600px] rounded-2xl border border-slate-300 bg-[#E4E9FD] bg-[#f9fafb] overflow-x-scroll overflow-y-scroll"
                             style={{
                                 scrollbarGutter: 'stable both-edges',
                             }}
