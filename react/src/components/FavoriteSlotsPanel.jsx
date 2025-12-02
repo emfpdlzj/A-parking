@@ -63,7 +63,7 @@ function FavoriteSlotsPanel(props) {
                         {favoriteItems.map((item) => (
                             <div
                                 key={item.id}
-                                className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-2"
+                                className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-2 border border-slate-200"
                             >
                                 <span>
                                     {item.buildingName} {item.slot}번
@@ -140,7 +140,7 @@ function FavoriteSlotsPanel(props) {
                         return (
                             <div
                                 key={slotId}
-                                className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-2"
+                                className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-2 border border-slate-200"
                             >
                                 <span>
                                     {buildingName} {slotId}번

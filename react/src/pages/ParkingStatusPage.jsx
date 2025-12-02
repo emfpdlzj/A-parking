@@ -32,9 +32,19 @@ export default function ParkingStatusPage() {
     const [favorites, setFavorites] = useState(
         () => getFavsByBuilding(buildingId) || [],
     )
+    const [favError, setFavError] = useState('')
 
     const handleToggleFavoriteForSelected = () => {
         if (!selectedSlot) return
+        const isAlreadyFav = favorites.includes(selectedSlot)
+        // 새로 추가하려는 경우에만 개수 체크 (최대 5개)
+        if (!isAlreadyFav && favorites.length >= 5) {
+            setFavError('선호 자리는 건물당 최대 5개까지 등록할 수 있습니다.')
+            return
+        }
+
+        // 정상 추가/해제 시 에러 메시지 초기화
+        setFavError('')
         toggleFav(buildingId, selectedSlot)
         setFavorites(getFavsByBuilding(buildingId))
     }
@@ -179,6 +189,11 @@ export default function ParkingStatusPage() {
                                             ? '즐겨찾기 해제'
                                             : '즐겨찾기 추가'}
                                     </button>
+                                    {favError && (
+                                        <p className="mt-2 text-xs text-red-500">
+                                            {favError}
+                                        </p>
+                                    )}
                                 </>
                             ) : (
                                 <p className="text-sm text-slate-500">
