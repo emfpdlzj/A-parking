@@ -1,6 +1,17 @@
 import React from 'react'
 import basicProfile from '../assets/icons/basic_profile.jpeg'
 import profileIcon from '../assets/icons/profile.png'
+import paldalImg from "../assets/buildings/paldal.svg";
+import libraryImg from "../assets/buildings/library.svg";
+import yulgokImg from "../assets/buildings/yulgok.svg";
+import yeonamImg from "../assets/buildings/yeonam.svg";
+
+const BUILDINGS = [
+    { id: 'paldal', name: '팔달관' },
+    { id: 'library', name: '도서관'},
+    { id: 'yulgok', name: '율곡관'},
+    { id: 'yeonam', name: '연암관' },
+]
 
 function ProfilePanel({
                           profile,
@@ -12,7 +23,9 @@ function ProfilePanel({
                           onCancel,
                           onChangeImage,
                           onClearImage,
-                      }) {
+                      })
+
+{
     return (
         <div className="bg-white rounded-2xl shadow-md p-4">
             {/* 상단 타이틀*/}
@@ -99,10 +112,14 @@ function ProfilePanel({
                         <input
                             type="text"
                             value={editProfile.studentId}
-                            onChange={(e) =>
-                                onChangeField('studentId', e.target.value)
-                            }
+                            onChange={(e) => {
+                                // 숫자만 9자리까지 가능
+                                const onlyDigits = e.target.value.replace(/\D/g, '').slice(0, 9)
+                                onChangeField('studentId', onlyDigits)
+                            }}
+                            maxLength={9}
                             className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-sm"
+                            placeholder="202012345"
                         />
                     </div>
                     <div className="flex justify-between items-center gap-4">
@@ -136,8 +153,18 @@ function ProfilePanel({
                         <input
                             type="text"
                             value={editProfile.carNumber}
-                            disabled
-                            className="flex-1 border border-slate-200 bg-[#f9fafb] text-slate-500 rounded-md px-2 py-1 text-sm cursor-not-allowed"
+                            onChange={(e) => {
+                                // 공백 제거
+                                let v = e.target.value.replace(/\s/g, '')
+                                // 숫자와 한글 한글자만 허용
+                                v = v.replace(/[^0-9가-힣]/g, '')
+                                // 최대 7글자 (2 + 1 + 4)
+                                v = v.slice(0, 7)
+                                onChangeField('carNumber', v)
+                            }}
+                            maxLength={7}
+                            className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-sm"
+                            placeholder="12가3456"
                         />
                     </div>
 
@@ -190,7 +217,11 @@ function ProfilePanel({
                     </div>
                     <div className="flex justify-between">
                         <span>즐겨찾는 건물</span>
-                        <span>{profile.favoriteBuilding}</span>
+                        <span>
+                        {BUILDINGS.find(
+                            (b) => b.id === profile.favoriteBuilding,
+                        )?.name || profile.favoriteBuilding}
+                        </span>
                     </div>
                 </div>
             )}
