@@ -1,63 +1,75 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, {useState, useEffect, useRef} from 'react'
 import {TransformWrapper, TransformComponent} from 'react-zoom-pan-pinch'
 
-const SLOT_WIDTH = 60
-const SLOT_HEIGHT = 40
+const SLOT_WIDTH = 80
+const SLOT_HEIGHT = 50
 
 const PARKING_LAYOUTS = {
     paldal: {
         name: '팔달관',
-        buildingRect: {left: '10%', top: '70%', width: '70%', height: '18%'},
-        entranceRect: {left: '34%', top: '24%', width: '8%', height: '18%'},
+        buildingRect: {left: '5%', top: '80%', width: '70%', height: '8%'},
+        entranceRect: {left: '34%', top: '18%', width: '6.5%', height: '6%'},
         clusters: [
             {id: 'paldal-cctv', left: '6%', top: '18%', rows: 2, cols: 8},
             {id: 'paldal-top-right', left: '42%', top: '18%', rows: 2, cols: 8},
             {id: 'paldal-mid-left', left: '6%', top: '50%', rows: 2, cols: 8},
             {id: 'paldal-mid-center', left: '42%', top: '50%', rows: 2, cols: 8},
-            {id: 'paldal-mid-right', left: '84%', top: '50%', rows: 2, cols: 3},
+            {id: 'paldal-mid-right', left: '78%', top: '50%', rows: 2, cols: 3},
         ],
     },
 
     library: {
         name: '도서관',
-        buildingRect: {left: '6%', top: '12%', width: '12%', height: '68%'},
-        entranceRect: {left: '46%', top: '65%', width: '8%', height: '18%'},
+        buildingRect: {left: '6%', top: '18%', width: '8%', height: '70%'},
+        entranceRect: {left: '52%', top: '74%', width: '6.5%', height: '6%'},
+        // 위쪽 왼쪽/오른쪽, 아래쪽 왼쪽/오른쪽 - 4개 블록
         clusters: [
-            {id: 'lib-top-left', left: '26%', top: '18%', rows: 2, cols: 8},
+            // 위 왼쪽
+            {id: 'lib-top-left', left: '24%', top: '18%', rows: 2, cols: 8},
+            // 위 오른쪽
             {id: 'lib-top-right', left: '60%', top: '18%', rows: 2, cols: 8},
-            {id: 'lib-bottom-left', left: '26%', top: '52%', rows: 2, cols: 8},
+            {id: 'lib-top-right2', left: '90%', top: '18%', rows: 2, cols: 3},
+            // 아래 왼쪽
+            {id: 'lib-bottom-left', left: '24%', top: '52%', rows: 2, cols: 8},
+            // 아래 오른쪽
             {id: 'lib-bottom-right', left: '60%', top: '52%', rows: 2, cols: 8},
-            {id: 'lib-small-right', left: '84%', top: '52%', rows: 2, cols: 3},
         ],
     },
 
     yeonam: {
         name: '연암관',
-        buildingRect: {left: '10%', top: '10%', width: '70%', height: '15%'},
-        entranceRect: {left: '80%', top: '68%', width: '8%', height: '18%'},
+        // 위쪽 얇은 건물 바
+        buildingRect: {left: '10%', top: '12%', width: '50%', height: '8%'},
+        // 오른쪽 아래 입구 박스 축소
+        entranceRect: {left: '76.3%', top: '71.4%', width: '6.5%', height: '6%'},
         clusters: [
-            {id: 'yeonam-col-1', left: '10%', top: '30%', rows: 10, cols: 1},
-            {id: 'yeonam-col-2', left: '22%', top: '30%', rows: 10, cols: 1},
-            {id: 'yeonam-col-3', left: '34%', top: '30%', rows: 10, cols: 1},
-            {id: 'yeonam-col-4', left: '46%', top: '30%', rows: 10, cols: 1},
-            {id: 'yeonam-col-5', left: '58%', top: '30%', rows: 10, cols: 1},
-            {id: 'yeonam-col-6', left: '70%', top: '30%', rows: 10, cols: 1},
-            {id: 'yeonam-col-7', left: '82%', top: '30%', rows: 10, cols: 1},
+            {id: 'yeonam-col-1', left: '10%', top: '30%', rows: 8, cols: 1},
+            {id: 'yeonam-col-2', left: '21%', top: '30%', rows: 8, cols: 1},
+            {id: 'yeonam-col-3', left: '26.5%', top: '30%', rows: 8, cols: 1},
+            {id: 'yeonam-col-4', left: '37.5%', top: '30%', rows: 8, cols: 1},
+            {id: 'yeonam-col-5', left: '43%', top: '30%', rows: 8, cols: 1},
+            {id: 'yeonam-col-6', left: '54%', top: '30%', rows: 8, cols: 1},
+            {id: 'yeonam-col-7', left: '59.5%', top: '30%', rows: 8   , cols: 1},
+            {id: 'yeonam-col-8', left: '70.5%', top: '30%', rows: 8   , cols: 1},
+            {id: 'yeonam-col-9', left: '76%', top: '30%', rows: 6   , cols: 1},
         ],
     },
 
     yulgok: {
         name: '율곡관',
-        buildingRect: {left: '10%', top: '70%', width: '60%', height: '16%'},
-        entranceRect: {left: '74%', top: '70%', width: '8%', height: '16%'},
+        // 아래쪽 건물 바 두께 축소
+        buildingRect: {left: '10%', top: '70%', width: '40%', height: '8%'},
+        // 건물 오른쪽 끝 입구 박스 축소
+        entranceRect: {left: '52%', top: '70%', width: '6.5%', height: '6%'},
         clusters: [
-            {id: 'yulgok-col-1', left: '10%', top: '18%', rows: 10, cols: 1},
-            {id: 'yulgok-col-2', left: '22%', top: '18%', rows: 10, cols: 1},
-            {id: 'yulgok-col-3', left: '34%', top: '18%', rows: 10, cols: 1},
-            {id: 'yulgok-col-4', left: '46%', top: '18%', rows: 10, cols: 1},
-            {id: 'yulgok-col-5', left: '58%', top: '18%', rows: 10, cols: 1},
-            {id: 'yulgok-col-6', left: '70%', top: '18%', rows: 10, cols: 1},
-            {id: 'yulgok-col-7', left: '82%', top: '18%', rows: 10, cols: 1},
+            {id: 'yulgok-col-1', left: '10%', top: '18%', rows: 8, cols: 1},
+            {id: 'yulgok-col-2', left: '21%', top: '18%', rows: 8, cols: 1},
+            {id: 'yulgok-col-3', left: '26.5%', top: '18%', rows: 8, cols: 1},
+            {id: 'yulgok-col-4', left: '37.5%', top: '18%', rows: 8, cols: 1},
+            {id: 'yulgok-col-5', left: '43  %', top: '18%', rows: 8, cols: 1},
+            {id: 'yulgok-col-6', left: '62%', top: '18%', rows: 10, cols: 1},
+            {id: 'yulgok-col-7', left: '73%', top: '18%', rows: 10, cols: 1},
+            {id: 'yulgok-col-8', left: '78.5%', top: '18%', rows: 10, cols: 1},
         ],
     },
 }
@@ -76,7 +88,7 @@ export default function ParkingLotLayout({
     const cellWidth = isVerticalSlot ? SLOT_HEIGHT : SLOT_WIDTH
     const cellHeight = isVerticalSlot ? SLOT_WIDTH : SLOT_HEIGHT
 
-    const [zoomPercent, setZoomPercent] = useState(60)
+    const [zoomPercent, setZoomPercent] = useState(70)
     // 스크롤바 중앙 정렬용
     const scrollRef = useRef(null)
     // 마운트 시 한 번, 스크롤을 가로/세로 중앙으로 이동
@@ -114,7 +126,7 @@ export default function ParkingLotLayout({
                         type="button"
                         onClick={() => onSlotClick && onSlotClick(slotId)}
                         className={
-                            'rounded-[4px] border flex items-center justify-center text-[10px] select-none transition ' +
+                            'rounded-[4px] border flex items-center justify-center text-[14px] select-none transition ' +
                             cls
                         }
                         style={{
@@ -154,7 +166,7 @@ export default function ParkingLotLayout({
         <TransformWrapper
             minScale={0.6}
             maxScale={1.5}
-            initialScale={0.6}
+            initialScale={0.7}
             // 마우스/터치 줌 막기
             wheel={{disabled: true}}
             pinch={{disabled: true}}
@@ -234,7 +246,7 @@ export default function ParkingLotLayout({
                                 <div className="relative w-[1600px] h-[900px] bg-white rounded-xl overflow-hidden">
                                     {/* 건물 (반투명) */}
                                     <div
-                                        className="absolute flex items-center justify-center text-xs text-white bg-[#0f4c75]/50 rounded-md"
+                                        className="absolute flex items-center justify-center text-L text-white bg-[#0f4c75]/50 rounded-md"
                                         style={{
                                             left: layout.buildingRect.left,
                                             top: layout.buildingRect.top,
@@ -246,7 +258,7 @@ export default function ParkingLotLayout({
                                     </div>
 
                                     <div
-                                        className="absolute flex items-center justify-center text-xs text-white bg-[#f97316]/60 rounded-md"
+                                        className="absolute flex items-center justify-center text-L text-white bg-[#f97316]/60 rounded-md"
                                         style={{
                                             left: layout.entranceRect.left,
                                             top: layout.entranceRect.top,
