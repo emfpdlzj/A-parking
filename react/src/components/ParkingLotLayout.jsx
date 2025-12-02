@@ -1,7 +1,6 @@
-import React from 'react'
+import React ,{ useState } from 'react'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 
-// 한 칸의 고정 크기 - 같은 건물 내에서 동일하게 하도록 수정해야됨.
 const SLOT_WIDTH = 56
 const SLOT_HEIGHT = 40
 
@@ -71,8 +70,8 @@ export default function ParkingLotLayout({
                                          }) {
     const layout = PARKING_LAYOUTS[buildingId] ?? PARKING_LAYOUTS.paldal
     const favoriteSet = new Set(favorites)
-
     let nextSlotId = 1
+    const [zoomPercent, setZoomPercent] = useState(100)
 
     const renderCluster = (cluster) => {
         const cells = []
@@ -146,12 +145,13 @@ export default function ParkingLotLayout({
             pinch={{ disabled: true }}
             doubleClick={{ disabled: true }}
             panning={{ disabled: false, velocityDisabled: true }}
+            onTransformed={(ref) => {
+                const scale = ref?.state?.scale ?? 1
+                setZoomPercent(Math.round(scale * 100))
+            }}
         >
             {(utils) => {
-                const { zoomIn, zoomOut, resetTransform, state } = utils || {}
-                const zoomPercent = state?.scale
-                    ? Math.round(state.scale * 100)
-                    : 100
+                const { zoomIn, zoomOut, resetTransform } = utils || {}
 
                 return (
                     <div className="w-full">
@@ -163,19 +163,21 @@ export default function ParkingLotLayout({
                             <div className="flex items-center gap-4 text-[11px] text-slate-600">
                                 <div className="flex items-center gap-3">
                                     <span className="flex items-center gap-1">
-                                        <span className="inline-block w-3 h-3 rounded-[3px] bg-[#dcfce7] border border-[#22c55e]" />
+                                        <span className="inline-block w-5 h-3 rounded-[3px] bg-[#dcfce7] border border-[#22c55e]" />
                                         주차 가능
                                     </span>
                                     <span className="flex items-center gap-1">
-                                        <span className="inline-block w-3 h-3 rounded-[3px] bg-[#fee2e2] border border-[#ef4444]" />
+                                        <span className="inline-block w-5 h-3 rounded-[3px] bg-[#fee2e2] border border-[#ef4444]" />
                                         점유 중
                                     </span>
                                     <span className="flex items-center gap-1">
-                                        <span className="inline-block w-3 h-3 rounded-[3px] bg-[#fef9c3] border border-[#facc15]" />
+                                        <span className="inline-block w-5 h-3 rounded-[3px] bg-[#fef9c3] border border-[#facc15]" />
                                         선호 자리
                                     </span>
                                 </div>
-
+                                     <span className="ml-1 text-[14px] text-slate-500 w-10 text-right">
+                                        {zoomPercent}%
+                                    </span>
                                 <div className="flex items-center gap-1">
                                     <button
                                         type="button"
@@ -198,9 +200,7 @@ export default function ParkingLotLayout({
                                     >
                                         초기화
                                     </button>
-                                    <span className="ml-1 text-[11px] text-slate-500 w-10 text-right">
-                                        {zoomPercent}%
-                                    </span>
+
                                 </div>
                             </div>
                         </div>
