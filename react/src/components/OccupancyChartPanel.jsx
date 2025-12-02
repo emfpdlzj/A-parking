@@ -9,7 +9,7 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from 'recharts'
-import { getAnalysis } from '../api/parking'
+import { getAnalysis } from '../api/parking.js'
 import chartImg from '../assets/icons/chartIcon.svg'
 
 function OccupancyChartPanel({ buildings }) {

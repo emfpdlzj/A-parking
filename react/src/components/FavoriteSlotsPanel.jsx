@@ -1,5 +1,5 @@
 import React from 'react'
-import { getSlotStatus } from '../utils/slotStatusStorage'
+import { getSlotStatus } from '../utils/slotStatusStorage.js'
 import starIcon from "../assets/icons/star.svg";
 import plusIcon from "../assets/icons/plusIcon.svg";
 function FavoriteSlotsPanel(props) {

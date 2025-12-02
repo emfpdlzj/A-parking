@@ -6,7 +6,7 @@ import {
     enterParking,
     previewParkingFee,
     settleParkingFee,
-} from '../api/parking'
+} from '../api/parking.js'
 
 const formatDuration = (minutes) => {
     if (minutes == null) return '-'
