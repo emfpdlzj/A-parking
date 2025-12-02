@@ -125,7 +125,7 @@ export default function BuildingSelectPage() {
             <main className="flex-1 px-10 py-6">
                 <div className="flex gap-6">
                     {/* 왼쪽 영역 */}
-                    <section className="flex-[2] flex flex-col gap-6">
+                    <section className="flex-[2] flex flex-col gap-6 min-w-0">
                         {/* 건물 선택 카드 리스트 */}
                         <div>
                                 <h2 className="text-sm font-semibold text-slate-800">

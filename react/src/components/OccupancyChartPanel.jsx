@@ -115,8 +115,8 @@ function OccupancyChartPanel({ buildings }) {
             {analysisError ? (
                 <p className="text-xs text-red-500">{analysisError}</p>
             ) : (
-                <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
+                <div className="h-64 w-full min-w-0">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={10}>
                         <LineChart
                             data={analysisData}
                             margin={{ left: -20 }}
