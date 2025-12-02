@@ -1,6 +1,7 @@
 import React from 'react'
 import { getSlotStatus } from '../utils/slotStatusStorage'
-
+import starIcon from "../assets/icons/star.svg";
+import plusIcon from "../assets/icons/plusIcon.svg";
 function FavoriteSlotsPanel(props) {
     const { mode } = props
 
@@ -43,10 +44,16 @@ function FavoriteSlotsPanel(props) {
 
         return (
             <div className="bg-white rounded-2xl shadow-md p-4">
-                <h3 className="text-sm font-semibold text-slate-800 mb-3">
-                    내 선호 자리
-                </h3>
-
+                <div className="flex items-center gap-2 mb-3">
+                    <img
+                        src={starIcon}
+                        alt="star 아이콘"
+                        className="w-4 h-4 object-contain"
+                    />
+                    <h3 className="text-sm font-semibold text-slate-800">
+                        내 선호 자리
+                    </h3>
+                </div>
                 {favoriteItems.length === 0 ? (
                     <p className="text-xs text-slate-500">
                         즐겨찾기한 좌석이 없음
@@ -88,12 +95,19 @@ function FavoriteSlotsPanel(props) {
 
                 <button
                     type="button"
-                    className="mt-3 w-full rounded-lg border border-dashed border-slate-300 py-2 text-sm text-slate-500 hover:bg-[#f9fafb] transition"
-                    onClick={() =>
-                        onNavigateToBuilding(profileFavoriteBuilding)
-                    }
+                    onClick={() => onNavigateToBuilding(profileFavoriteBuilding)}
+                    className="mt-3 w-full rounded-2xl border border-dashed border-[#cbd5f5]
+               px-4 py-3 flex items-center justify-center gap-2
+               text-sm text-slate-700 hover:bg-[#f9fafb] transition"
                 >
-                    자리 추가하러 가기
+                    <img
+                        src={plusIcon}
+                        alt="plus 아이콘"
+                        className="w-4 h-4 object-contain"
+                    />
+                    <span className="font-semibold">
+                        자리 추가하러 가기
+                    </span>
                 </button>
             </div>
         )
@@ -103,9 +117,16 @@ function FavoriteSlotsPanel(props) {
 
     return (
         <div className="bg-white rounded-2xl shadow-md p-4">
-            <h3 className="text-sm font-semibold text-slate-800 mb-2">
-                내 선호 자리
-            </h3>
+            <div className="flex items-center gap-2 mb-3">
+                <img
+                    src={starIcon}
+                    alt="star 아이콘"
+                    className="w-4 h-4 object-contain"
+                />
+                <h3 className="text-sm font-semibold text-slate-800">
+                    내 선호 자리
+                </h3>
+            </div>
             {favorites.length === 0 ? (
                 <p className="text-sm text-slate-500">
                     즐겨찾기한 자리가 없음

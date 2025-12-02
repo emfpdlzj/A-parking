@@ -2,6 +2,7 @@ import React from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom' // 라우팅 관련
 import { useAuth } from '../hooks/useAuth'
 import parkingicon from '../assets/icons/parking_black.png'
+import logoutIcon from '../assets/icons/logout.svg'
 
 export default function Header() {
     const { accessToken, member, logout } = useAuth()
@@ -40,9 +41,14 @@ export default function Header() {
                         </span>
                         <button
                             type="button"
-                            className="px-4 py-1.5 text-sm font-medium border border-[#0b57d0] text-white bg-[#0b57d0] hover:bg-[#174ea6] rounded-lg transition"
+                            className="px-4 py-1.5 text-sm font-medium border border-[#0b57d0] text-white bg-[#0b57d0] hover:bg-[#174ea6] rounded-lg transition flex items-center gap-2"
                             onClick={handleLogout}
                         >
+                            <img
+                                src={logoutIcon}
+                                alt="로그아웃 아이콘"
+                                className="w-5 h-5 object-contain"
+                            />
                             로그아웃
                         </button>
                     </>

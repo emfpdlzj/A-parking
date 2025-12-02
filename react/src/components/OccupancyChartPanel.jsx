@@ -10,6 +10,7 @@ import {
     ResponsiveContainer,
 } from 'recharts'
 import { getAnalysis } from '../api/parking'
+import chartImg from '../assets/icons/chartIcon.svg'
 
 function OccupancyChartPanel({ buildings }) {
     const [analysisBuilding, setAnalysisBuilding] = useState('paldal')
@@ -82,9 +83,16 @@ function OccupancyChartPanel({ buildings }) {
         <section className="bg-white rounded-2xl shadow-md p-4">
             <div className="flex items-center justify-between mb-4">
                 <div>
-                    <h3 className="text-sm font-semibold text-slate-800">
-                        과거 점유율
-                    </h3>
+                    <div className="flex items-center gap-2 mb-3">
+                        <img
+                            src={chartImg}
+                            alt="차트 아이콘"
+                            className="w-4 h-4 object-contain"
+                        />
+                        <h3 className="text-sm font-semibold text-slate-800">
+                            과거 점유율
+                        </h3>
+                    </div>
                     {analysisRangeText && (
                         <p className="mt-0.5 text-[11px] text-slate-500">
                             {analysisRangeText}

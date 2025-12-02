@@ -1,6 +1,7 @@
 // ParkingUsagePanel.jsx
 import React, { useEffect, useState } from 'react'
 import reloadIcon from '../assets/icons/reload.svg'
+import parkingIcon from '../assets/icons/parking_icon.png'
 import {
     enterParking,
     previewParkingFee,
@@ -113,7 +114,7 @@ function ParkingUsagePanel({ profileCarNumber }) {
             setLastUpdated(new Date())
 
             setStatusText(
-                `차량 번호: ${profileCarNumber}\n입차 완료!\n"예상 요금 확인" 버튼으로 현재까지의 요금을 확인할 수 있습니다.`,
+                `차량 번호: ${profileCarNumber}\n입차 완료!\n"새로고침" 버튼으로 현재까지의 요금을 확인할 수 있습니다.`,
             )
         } catch (error) {
             console.error(
@@ -280,10 +281,16 @@ function ParkingUsagePanel({ profileCarNumber }) {
 
     return (
         <div className="bg-white rounded-2xl shadow-md p-4">
-            <h3 className="text-sm font-semibold text-[#174ea6] mb-4">
-                내 주차 현황
-            </h3>
-
+            <div className="flex items-center gap-2 mb-4">
+                <img
+                    src={parkingIcon}
+                    alt="주차현황 아이콘"
+                    className="w-5 h-5 object-contain"
+                />
+                <h3 className="text-sm font-semibold text-slate-800">
+                    내 주차 현황
+                </h3>
+            </div>
             {/* 내용 */}
             <div className="space-y-2 text-sm text-slate-800">
                 <div className="flex justify-between">
@@ -337,7 +344,7 @@ function ParkingUsagePanel({ profileCarNumber }) {
                     type="button"
                     onClick={mainButton.onClick}
                     disabled={parkingLoading}
-                    className={`w-full rounded-full py-2.5 text-sm font-semibold text-white ${mainButtonClass} disabled:opacity-60`}
+                    className={`w-full rounded-lg py-2.5 text-sm font-semibold text-white ${mainButtonClass} disabled:opacity-60`}
                 >
                     {parkingLoading ? '처리 중...' : mainButton.label}
                 </button>
@@ -349,7 +356,7 @@ function ParkingUsagePanel({ profileCarNumber }) {
                     type="button"
                     onClick={handlePreview}
                     disabled={parkingLoading}
-                    className="w-full rounded-full bg-[#f3f4f6] text-slate-700 text-sm py-2.5 flex items-center justify-center gap-2 hover:bg-[#e5e7eb] disabled:opacity-60"
+                    className="w-full rounded-lg bg-[#f3f4f6] text-slate-700 text-sm py-2.5 flex items-center justify-center gap-2 hover:bg-[#e5e7eb] disabled:opacity-60"
                 >
                     <img
                         src={reloadIcon}

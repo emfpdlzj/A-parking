@@ -128,9 +128,9 @@ export default function BuildingSelectPage() {
                     <section className="flex-[2] flex flex-col gap-6">
                         {/* 건물 선택 카드 리스트 */}
                         <div>
-                            <h2 className="text-sm font-semibold text-slate-800 mb-3">
-                                건물 선택
-                            </h2>
+                                <h2 className="text-sm font-semibold text-slate-800">
+                                    건물 선택
+                                </h2>
                             <div className="grid grid-cols-2 gap-4">
                                 {BUILDINGS.map((b) => {
                                     const info = summary[b.id]

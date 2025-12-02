@@ -53,7 +53,7 @@ export default function LoginPage() {
                     <section className="bg-white rounded-2xl shadow-lg px-12 py-10">
                         {/* 로고 + 타이틀 영역 */}
                         <div className="flex flex-col items-center mb-8">
-                            <h1 className="text-3xl font-bold text-[#174ea6] mb-4">
+                            <h1 className="text-3xl font-semibold text-[#174ea6] mb-4">
                                 A Parking
                             </h1>
                             <img
