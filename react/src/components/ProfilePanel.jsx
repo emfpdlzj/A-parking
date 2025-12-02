@@ -1,4 +1,6 @@
 import React from 'react'
+import basicProfile from '../assets/icons/basic_profile.jpeg'
+import profileIcon from '../assets/icons/profile.png'
 
 function ProfilePanel({
                           profile,
@@ -13,10 +15,19 @@ function ProfilePanel({
                       }) {
     return (
         <div className="bg-white rounded-2xl shadow-md p-4">
+            {/* 상단 타이틀*/}
             <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-slate-800">
-                    내 정보
-                </h3>
+                <div className="flex items-center gap-2">
+                    <img
+                        src={profileIcon}
+                        alt="프로필 아이콘"
+                        className="w-6 h-6 object-contain"
+                    />
+                    <h3 className="text-sm font-semibold text-slate-800">
+                        내 정보
+                    </h3>
+                </div>
+
                 {!isEditing && (
                     <button
                         type="button"
@@ -30,17 +41,14 @@ function ProfilePanel({
 
             {isEditing ? (
                 <div className="space-y-2 text-sm text-slate-700">
+                    {/* 편집 모드 */}
                     <div className="flex items-center gap-4 mb-3">
                         <div className="w-12 h-12 rounded-full bg-[#e5e7eb] overflow-hidden flex items-center justify-center text-[11px] text-slate-500">
-                            {editProfile.profileImage ? (
-                                <img
-                                    src={editProfile.profileImage}
-                                    alt={editProfile.name}
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <span>사진</span>
-                            )}
+                            <img
+                                src={editProfile.profileImage || basicProfile}
+                                alt={editProfile.name || '기본 프로필'}
+                                className="w-full h-full object-cover"
+                            />
                         </div>
 
                         <div className="flex flex-col gap-1">
@@ -152,17 +160,14 @@ function ProfilePanel({
                 </div>
             ) : (
                 <div className="space-y-1 text-sm text-slate-700">
+                    {/* 보기 모드 */}
                     <div className="flex items-center gap-3 mb-2">
                         <div className="w-12 h-12 rounded-full bg-[#e5e7eb] overflow-hidden flex items-center justify-center text-[11px] text-slate-500">
-                            {profile.profileImage ? (
-                                <img
-                                    src={profile.profileImage}
-                                    alt={profile.name}
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <span>사진</span>
-                            )}
+                            <img
+                                src={profile.profileImage || basicProfile}
+                                alt={profile.name || '기본 프로필'}
+                                className="w-full h-full object-cover"
+                            />
                         </div>
                         <div className="text-sm">
                             <div className="font-semibold text-slate-800">
