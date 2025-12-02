@@ -7,6 +7,8 @@ import { getFavsByBuilding, toggleFav } from '../utils/favStorage'
 import ParkingLotLayout from '../components/ParkingLotLayout'
 import ParkingUsagePanel from '../components/ParkingUsagePanel'
 import FavoriteSlotsPanel from '../components/FavoriteSlotsPanel'
+import cloudOn from '../assets/icons/cloud_on.svg'
+import cloudOff from '../assets/icons/cloud_off.svg'
 
 const BUILDING_NAMES = {
     paldal: '팔달관',
@@ -112,9 +114,16 @@ export default function ParkingStatusPage() {
                             {buildingName} 주차장
                         </h2>
                     </div>
-                    <span className="text-xs text-slate-500">
-                        {connected ? '실시간 연결됨' : '연결 대기 중'}
-                    </span>
+                    <div className="flex items-center gap-1 text-xs text-slate-500">
+                        <img
+                            src={connected ? cloudOn : cloudOff}
+                            alt={connected ? '실시간 연결됨' : '연결 대기 중'}
+                            className="w-4 h-4"
+                        />
+                        <span>
+        {connected ? '실시간 연결됨' : '연결 대기 중'}
+    </span>
+                    </div>
                 </div>
 
                 <div className="mt-4 grid grid-cols-[minmax(0,1fr)_320px] gap-6">
