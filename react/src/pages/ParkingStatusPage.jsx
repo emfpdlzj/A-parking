@@ -26,7 +26,7 @@ const TOTAL_SLOTS_BY_BUILDING = {
 export default function ParkingStatusPage() {
     const { buildingId } = useParams()
     const navigate = useNavigate()
-    const { slots, connected, error } = useParkingSocket(buildingId)
+    const { slots, connected, error, closeSocket } = useParkingSocket(buildingId)
 
     const [selectedSlot, setSelectedSlot] = useState(null)
     const [favorites, setFavorites] = useState(
@@ -89,8 +89,12 @@ export default function ParkingStatusPage() {
                     <div className="flex items-center gap-2">
                         <button
                             type="button"
-                            onClick={() => navigate(-1)}
-                            className="px-3 py-1.5 text-xs rounded-full bg-white shadow-sm hover:bg-[#f3f4f6] transition"
+                            onClick={() => {
+                                // 뒤로가기 전에 해당 건물 채널 무조건 !WebSocket 확실히 정리
+                                closeSocket()
+                                navigate(-1)
+                            }}
+                            className="px-3 py-1.5 text-xs rounded-lg bg-white shadow-sm hover:bg-[#f3f4f6] transition"
                         >
                             ← 뒤로가기
                         </button>
