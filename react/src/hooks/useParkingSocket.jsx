@@ -14,24 +14,26 @@ export function useParkingSocket(buildingId) {
     // 언제 호출되든 현재 건물 채널 WebSocket을 확실하게 끊는 함수
     const closeSocket = (reason) => {
         const ws= wsRef.current
-        if (!wsRef.current) return
+        if (!ws) return
 
         console.log(
             `[WS CLOSE] 건물 채널 종료 → ${buildingId}, readyState=${wsRef.current.readyState}`,
         )
 
-        try {
-            // 실제로 열려 있을 때만 정상 코드 (1000)로 종료함.
-            if(ws.readyState === WebSocket.OPEN){
-                ws.close(1000, reason ?? '페이지 이동/언마운트')
-            }
-            //알아서 종료
-        } catch (e) {
-            console.error('웹소켓 수동 종료 중 오류', e)
-        } finally {
-            wsRef.current = null
-            setConnected(false)
+        if (
+            ws.readyState === WebSocket.CONNECTING ||
+            ws.readyState === WebSocket.OPEN
+        ) {
+            ws.close(1000, '페이지 이동/언마운트')
         }
+        // 이벤트 핸들러 제거 (메모리 누수 방지 및 언마운트 후 상태 업데이트 방지)
+        ws.onopen = null
+        ws.onclose = null
+        ws.onmessage = null
+        ws.onerror = null
+
+        wsRef.current = null
+        setConnected(false)
     }
 
     useEffect(() => {
@@ -40,6 +42,10 @@ export function useParkingSocket(buildingId) {
         if (!accessToken) {
             setError('로그인 필요')
             return
+        }
+        // 기존 연결이 있다면 확실히 정리 후 새로 연결
+        if (wsRef.current) {
+            closeSocket()
         }
 
         // "Bearer xxx" 형태-> 뒤에 JWT만 사용
