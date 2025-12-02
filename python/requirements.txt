@@ -1,22 +1,13 @@
-# FastAPI 기본
+#pip install -r requirements.txt
+#uvicorn app.main:app --reload --port 8000
+
 fastapi==0.110.0
 uvicorn[standard]==0.30.1
 
-# 데이터 모델링
-pydantic==2.7.1
-
-# Redis
-redis==5.0.4
-
-# 환경변수 관리
+redis==5.0.8
+aiohttp==3.10.5
 python-dotenv==1.0.1
 
-# YOLO 
-ultralytics==8.1.0
+ultralytics==8.3.0
+opencv-python==4.10.0.84
 numpy==1.26.4
-
-# 영상 처리 
-opencv-python==4.9.0.80
-
-# HTTP 
-aiohttp==3.9.5
