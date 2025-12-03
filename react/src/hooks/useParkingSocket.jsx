@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from './useAuth'
 
-const WS_BASE = 'ws://localhost:8081'
+const WS_BASE = 'wss://a-parking.kro.kr/ws'
 
 export function useParkingSocket(buildingId) {
     const { accessToken } = useAuth()
