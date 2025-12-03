@@ -9,7 +9,7 @@ import ParkingStatus from './controller/building/ParkingFee.js';
 import { buildingSummaryRouter } from './controller/summary/BuildingSummary.js';
 
 const app = express();
-console.log('8080 서버 시작 중...');
+
 
 dotenv.config();
 applyCors(app); //cors 설정 적용
