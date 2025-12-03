@@ -15,12 +15,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          check-latest: true   # Node 설치만, npm ci는 절대 실행하지 않음
-
       - name: Deploy to Amazon Linux server
         uses: appleboy/ssh-action@0.1.7
         with:
