@@ -25,28 +25,28 @@ function ParkingUsagePanel({ profileCarNumber }) {
     const [lastUpdated, setLastUpdated] = useState(null)
     const [statusText, setStatusText] = useState('주차 정보 없음')
 
-    // (1) 로그인 후 페이지 처음 들어왔을 때 1회 강제 정산 시도
-    useEffect(() => {
-        const alreadySettled = sessionStorage.getItem('parkingSettledOnLogin')
-        if (alreadySettled) return
+    // // (1) 로그인 후 페이지 처음 들어왔을 때 1회 강제 정산 시도
+    // useEffect(() => {
+    //     const alreadySettled = sessionStorage.getItem('parkingSettledOnLogin')
+    //     if (alreadySettled) return
 
-        const forceSettleOnFirstVisit = async () => {
-            try {
-                await settleParkingFee()
-            } catch (error) {
-                const status = error?.response?.status
-                const msg = error?.response?.data?.message
+    //     const forceSettleOnFirstVisit = async () => {
+    //         try {
+    //             await settleParkingFee()
+    //         } catch (error) {
+    //             const status = error?.response?.status
+    //             const msg = error?.response?.data?.message
 
-                if (!(status === 400 && msg && msg.includes('활성'))) {
-                    console.warn('초기 자동 정산 시도 실패', status, msg || error)
-                }
-            } finally {
-                sessionStorage.setItem('parkingSettledOnLogin', '1')
-            }
-        }
+    //             if (!(status === 400 && msg && msg.includes('활성'))) {
+    //                 console.warn('초기 자동 정산 시도 실패', status, msg || error)
+    //             }
+    //         } finally {
+    //             sessionStorage.setItem('parkingSettledOnLogin', '1')
+    //         }
+    //     }
 
-        forceSettleOnFirstVisit()
-    }, [])
+    //     forceSettleOnFirstVisit()
+    // }, [])
 
     // (2) 컴포넌트 마운트 시, 현재 주차 상태 한 번 조회
     useEffect(() => {
