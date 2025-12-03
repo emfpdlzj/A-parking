@@ -22,6 +22,7 @@ jobs:
           username: ${{ secrets.AMAZON_LINUX_USERNAME }}
           key: ${{ secrets.AMAZON_LINUX_SSH_KEY }}
           port: ${{ secrets.AMAZON_LINUX_SSH_PORT }}
+          
           script: |
             # 3-1. repo 루트로 이동 후 전체 코드 업데이트
             cd /home/ec2-user/express
@@ -30,9 +31,6 @@ jobs:
             # 3-2. Express 앱 폴더로 이동 후 npm 설치
             cd /home/ec2-user/express/express
             npm install
-
-            # 3-3. .env 생성
-            echo "${{ secrets.DOTENV }}" > .env
 
             # 3-4. pm2 앱 재시작
             pm2 restart a-parking
