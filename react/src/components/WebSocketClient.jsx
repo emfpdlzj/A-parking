@@ -3,7 +3,7 @@ import { useAuth } from '../hooks/useAuth'; // 사용자님의 인증 훅 가정
 
 // 웹소켓 서버 포트: 8081
 const WS_PORT = 8081; 
-const WEBSOCKET_URL = `wss://a-parking.kro.kr/ws/paldal`;
+const WEBSOCKET_URL = `wss://a-parking.kro.kr/ws`;
 
 export default function WebSocketClientComponent() {
   const { accessToken } = useAuth(); // 로그인 후 저장된 토큰 가져오기
