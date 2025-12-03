@@ -16,22 +16,30 @@ export async function saveParkingStatus(userName) { //입차 하는 경우
 }
 
 export async function getParkingFeePreview(userName) {
-    const member = await findMemberByName(userName);
-    const car_number = member.car_number;
-    const entryInfo = await getEntryTime(car_number);
-    if (!entryInfo.entryTime) {
-        throw new Error('입차 기록이 없습니다.');
+    let carNumber = null;
+    let expect_fee = 0;
+    let duration_minutes = 0;
+    try {
+        const member = await findMemberByName(userName);
+        if (!member) {
+            throw new Error('회원 정보가 없습니다.');
+        }
+        carNumber = member.car_number;
+        const entryInfo = await getEntryTime(carNumber);
+        if (!entryInfo?.entryTime) {
+            throw new Error('입차 기록이 없습니다.');
+        }
+        const entryTime = moment.tz(entryInfo.entryTime, 'Asia/Seoul').toDate();
+        const now = moment.tz('Asia/Seoul').toDate();
+
+        const result = calculateFee(entryTime, now);
+        expect_fee = result.fee;
+        duration_minutes = result.durationMinutes;
+    } catch (error) {
+        console.warn(error.message);
     }
-    // 문자열을 moment로 변환 후 Date 객체로
-    const entryTime = moment.tz(entryInfo.entryTime, 'Asia/Seoul').toDate();
-    // 현재 시간 KST
-    const now = moment.tz('Asia/Seoul').toDate();
-    const { fee, durationMinutes } = calculateFee(entryTime, now);
-    return {
-        carNumber: car_number,
-        expect_fee: fee,
-        duration_minutes: durationMinutes
-    };
+
+    return { carNumber, expect_fee, duration_minutes };
 }
 
 export async function settleParkingFee(userName) {
