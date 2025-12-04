@@ -1,5 +1,4 @@
-// ParkingUsagePanel.jsx
-import React, { useEffect, useState } from 'react'
+import React, {useEffect, useState} from 'react'
 import reloadIcon from '../assets/icons/reload.svg'
 import parkingIcon from '../assets/icons/parking_icon.png'
 import {
@@ -18,7 +17,7 @@ const formatDuration = (minutes) => {
     return '0분'
 }
 
-function ParkingUsagePanel({ profileCarNumber }) {
+function ParkingUsagePanel({profileCarNumber}) {
     const [parkingStage, setParkingStage] = useState('idle') // 'idle' | 'entered' | 'readyToPay'
     const [parkingInfo, setParkingInfo] = useState(null) // preview / settle 응답
     const [parkingError, setParkingError] = useState('')
@@ -26,56 +25,41 @@ function ParkingUsagePanel({ profileCarNumber }) {
     const [lastUpdated, setLastUpdated] = useState(null)
     const [statusText, setStatusText] = useState('주차 정보 없음')
 
-    // // (1) 로그인 후 페이지 처음 들어왔을 때 1회 강제 정산 시도
-    // useEffect(() => {
-    //     const alreadySettled = sessionStorage.getItem('parkingSettledOnLogin')
-    //     if (alreadySettled) return
-
-    //     const forceSettleOnFirstVisit = async () => {
-    //         try {
-    //             await settleParkingFee()
-    //         } catch (error) {
-    //             const status = error?.response?.status
-    //             const msg = error?.response?.data?.message
-
-    //             if (!(status === 400 && msg && msg.includes('활성'))) {
-    //                 console.warn('초기 자동 정산 시도 실패', status, msg || error)
-    //             }
-    //         } finally {
-    //             sessionStorage.setItem('parkingSettledOnLogin', '1')
-    //         }
-    //     }
-
-    //     forceSettleOnFirstVisit()
-    // }, [])
-
-    // (2) 컴포넌트 마운트 시, 현재 주차 상태 한 번 조회
+    // 컴포넌트 마운트 시 현재 주차 상태 한 번 조회
     useEffect(() => {
         const initParkingState = async () => {
             setParkingLoading(true)
             setParkingError('')
-
             try {
                 const data = await previewParkingFee()
-                // 현재 입차중
                 setParkingInfo(data)
-                setParkingStage('entered')
-                setLastUpdated(new Date())
+
+                const now = new Date()
+                setLastUpdated(now)
 
                 const minutes = data.duration_minutes ?? 0
-                const h = Math.floor(minutes / 60)
-                const m = minutes % 60
+                const hasActive =
+                    minutes > 0 ||
+                    (typeof data.expect_fee === 'number' && data.expect_fee > 0)
 
-                setStatusText(
-                    `현재 입차 중입니다.\n` +
-                    `현재까지 예상 요금은 ${data.expect_fee.toLocaleString()}원 입니다.\n` +
-                    `이용 시간 : ${h}시간 ${m}분`,
-                )
+                if (hasActive) {
+                    setParkingStage('entered')
+                    setStatusText(
+                        `현재 입차중입니다.\n` +
+                        `현재까지 예상 요금은 ${data.expect_fee.toLocaleString()}원 입니다.\n` +
+                        `이용 시간 : ${formatDuration(minutes)}`,
+                    )
+                } else {
+                    setParkingStage('idle')
+                    setStatusText(
+                        '현재 진행 중인 주차가 없습니다.\n' +
+                        '"입차하기" 버튼을 눌러 주차를 시작해 주세요.',
+                    )
+                }
             } catch (error) {
                 const status = error?.response?.status
                 const msg = error?.response?.data?.message
 
-                // 진행 중인 주차가 없으면 idle로
                 if (status === 400 && msg && msg.includes('활성')) {
                     setParkingStage('idle')
                     setParkingInfo(null)
@@ -93,11 +77,11 @@ function ParkingUsagePanel({ profileCarNumber }) {
                         '현재 주차 정보를 불러오는 중 오류가 발생했습니다.',
                     )
                 }
-            } finally {
+            }
+            finally {
                 setParkingLoading(false)
             }
         }
-
         initParkingState()
     }, [])
 
@@ -141,14 +125,31 @@ function ParkingUsagePanel({ profileCarNumber }) {
         try {
             const data = await previewParkingFee()
             setParkingInfo(data)
-            setLastUpdated(new Date())
+            const now = new Date()
+            setLastUpdated(now)
 
             const minutes = data.duration_minutes ?? 0
-            const h = Math.floor(minutes / 60)
-            const m = minutes % 60
+
+            // 예상 요금이나 이용 시간이 0보다 크면 "이미 입차 중"이라고 판단
+            const hasActive =
+                minutes > 0 ||
+                (typeof data.expect_fee === 'number' && data.expect_fee > 0)
+
+            // 새로고침 시, 입차 전 상태였는데 실제로는 입차 중이면 버튼을 "출차하기"로 바꾸기
+            if (hasActive && parkingStage === 'idle') {
+                setParkingStage('entered')
+            }
+            // 반대로 활성 세션이 없으면 idle 로 되돌리기
+            if (!hasActive) {
+                setParkingStage('idle')
+            }
 
             setStatusText(
-                `현재까지 예상 요금은 ${data.expect_fee.toLocaleString()}원 입니다.\n이용 시간 : ${h}시간 ${m}분`,
+                hasActive
+                    ? `현재까지 예상 요금은 ${data.expect_fee.toLocaleString()}원 입니다.\n` +
+                    `이용 시간 : ${formatDuration(minutes)}`
+                    : '현재 진행 중인 주차가 없습니다.\n' +
+                    '"입차하기" 버튼을 눌러 주차를 시작해 주세요.',
             )
         } catch (error) {
             console.error(
@@ -165,7 +166,7 @@ function ParkingUsagePanel({ profileCarNumber }) {
         }
     }
 
-    // 3) 출차하기 (백엔드 호출 X, 상태만 변경)
+    // 3) 출차하기
     const handleExit = () => {
         if (parkingStage !== 'entered' && parkingStage !== 'readyToPay') {
             setStatusText('아직 입차가 되지 않았습니다!')
@@ -208,10 +209,47 @@ function ParkingUsagePanel({ profileCarNumber }) {
                 error.response?.status,
                 error.response?.data || error,
             )
-            const msg =
-                error.response?.data?.message ||
-                '정산 처리 중 오류가 발생했습니다.'
-            setParkingError(msg)
+
+            const msg = error.response?.data?.message
+
+            if (typeof msg === 'string' && msg.includes('입차 기록이 없습니다')) {
+                // 입차 기록이 없으면, 지금 시각 기준으로 자동 입차 처리
+                try {
+                    await enterParking()
+                    const now = new Date()
+
+                    setParkingStage('entered')
+                    setParkingInfo(null)
+                    setLastUpdated(now)
+                    setStatusText(
+                        `기존 입차 기록이 없어,\n` +
+                        `${now.toLocaleTimeString('ko-KR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })} 기준으로 새로 입차 처리되었습니다.\n` +
+                        `"새로고침" 버튼으로 현재까지의 요금을 확인할 수 있습니다.`,
+                    )
+                    setParkingError('')
+                    return
+                } catch (enterErr) {
+                    console.error(
+                        '자동 입차 처리 중 오류',
+                        enterErr.response?.status,
+                        enterErr.response?.data || enterErr,
+                    )
+                    const msg2 =
+                        enterErr.response?.data?.message ||
+                        '입차 기록이 없어 자동 입차 처리도 실패했습니다.'
+                    setParkingError(msg2)
+                    setStatusText(
+                        '입차 기록이 없어 결제를 진행할 수 없습니다.',
+                    )
+                }
+            } else {
+                const fallback =
+                    msg || '정산 처리 중 오류가 발생했습니다.'
+                setParkingError(fallback)
+            }
         } finally {
             setParkingLoading(false)
         }
@@ -225,8 +263,9 @@ function ParkingUsagePanel({ profileCarNumber }) {
                 ? '주차 중'
                 : '결제 대기'
 
-    // 이용 시간
-    const durationMinutes = parkingInfo?.duration_minutes ?? 0
+    // 이용 시간: 서버에서 받은 duration_minutes 사용
+    const durationMinutes =
+        parkingStage === 'idle' ? 0 : parkingInfo?.duration_minutes ?? 0
     const durationText =
         parkingStage === 'idle' ? '입차 전' : formatDuration(durationMinutes)
 
@@ -291,6 +330,7 @@ function ParkingUsagePanel({ profileCarNumber }) {
                     내 주차 현황
                 </h3>
             </div>
+
             {/* 내용 */}
             <div className="space-y-2 text-sm text-slate-800">
                 <div className="flex justify-between">
@@ -321,7 +361,7 @@ function ParkingUsagePanel({ profileCarNumber }) {
                 </div>
             </div>
 
-            {/* 안내 텍스트 (선택) */}
+            {/* 안내 텍스트 */}
             {statusText && (
                 <p className="mt-2 text-xs whitespace-pre-line text-slate-500">
                     {statusText}
