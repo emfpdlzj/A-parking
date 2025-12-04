@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react'
+import React, { useEffect, useState } from 'react'
 import reloadIcon from '../assets/icons/reload.svg'
 import parkingIcon from '../assets/icons/parking_icon.png'
 import {
@@ -17,7 +17,7 @@ const formatDuration = (minutes) => {
     return '0분'
 }
 
-function ParkingUsagePanel({profileCarNumber}) {
+function ParkingUsagePanel({ profileCarNumber }) {
     const [parkingStage, setParkingStage] = useState('idle') // 'idle' | 'entered' | 'readyToPay'
     const [parkingInfo, setParkingInfo] = useState(null) // preview / settle 응답
     const [parkingError, setParkingError] = useState('')
@@ -68,17 +68,12 @@ function ParkingUsagePanel({profileCarNumber}) {
                         '"입차하기" 버튼을 눌러 주차를 시작해 주세요.',
                     )
                 } else {
-                    console.error(
-                        '초기 주차 상태 조회 실패:',
-                        status,
-                        msg || error,
-                    )
+                    console.error('초기 주차 상태 조회 실패', error)
                     setParkingError(
                         '현재 주차 정보를 불러오는 중 오류가 발생했습니다.',
                     )
                 }
-            }
-            finally {
+            } finally {
                 setParkingLoading(false)
             }
         }
@@ -101,11 +96,7 @@ function ParkingUsagePanel({profileCarNumber}) {
                 `차량 번호: ${profileCarNumber}\n입차 완료!\n"새로고침" 버튼으로 현재까지의 요금을 확인할 수 있습니다.`,
             )
         } catch (error) {
-            console.error(
-                'enterParking 오류',
-                error.response?.status,
-                error.response?.data || error,
-            )
+            console.error('enterParking 오류', error)
             const msg =
                 error.response?.data?.message ||
                 '입차 처리 중 오류가 발생했습니다.'
@@ -152,11 +143,7 @@ function ParkingUsagePanel({profileCarNumber}) {
                     '"입차하기" 버튼을 눌러 주차를 시작해 주세요.',
             )
         } catch (error) {
-            console.error(
-                'previewParkingFee 오류',
-                error.response?.status,
-                error.response?.data || error,
-            )
+            console.error('previewParkingFee 오류', error)
             const msg =
                 error.response?.data?.message ||
                 '예상 요금 조회 중 오류가 발생했습니다.'
@@ -204,11 +191,7 @@ function ParkingUsagePanel({profileCarNumber}) {
 
             setParkingStage('idle')
         } catch (error) {
-            console.error(
-                'settleParkingFee 오류',
-                error.response?.status,
-                error.response?.data || error,
-            )
+            console.error('settleParkingFee 오류', error)
 
             const msg = error.response?.data?.message
 
@@ -232,11 +215,7 @@ function ParkingUsagePanel({profileCarNumber}) {
                     setParkingError('')
                     return
                 } catch (enterErr) {
-                    console.error(
-                        '자동 입차 처리 중 오류',
-                        enterErr.response?.status,
-                        enterErr.response?.data || enterErr,
-                    )
+                    console.error('자동 입차 처리 중 오류', enterErr)
                     const msg2 =
                         enterErr.response?.data?.message ||
                         '입차 기록이 없어 자동 입차 처리도 실패했습니다.'
