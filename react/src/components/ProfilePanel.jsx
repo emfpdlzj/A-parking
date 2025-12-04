@@ -45,8 +45,7 @@ function ProfilePanel({
                     <button
                         type="button"
                         onClick={onStartEdit}
-                        className="text-[11px] px-2 py-1 rounded-md bg-[#f3f4f6] text-slate-600 hover:bg-[#e5e7eb] transition"
-                    >
+                        className="text-[11px] px-2 py-1 rounded-md bg-[#f3f4f6] text-slate-600 hover:bg-[#e5e7eb] transition">
                         수정
                     </button>
                 )}
@@ -112,12 +111,9 @@ function ProfilePanel({
                         <input
                             type="text"
                             value={editProfile.studentId}
-                            onChange={(e) => {
-                                // 숫자만 9자리까지 가능
-                                const onlyDigits = e.target.value.replace(/\D/g, '').slice(0, 9)
-                                onChangeField('studentId', onlyDigits)
-                            }}
-                            maxLength={9}
+                            onChange={(e) =>
+                                onChangeField('studentId', e.target.value)
+                            }
                             className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-sm"
                             placeholder="202012345"
                         />
@@ -153,16 +149,9 @@ function ProfilePanel({
                         <input
                             type="text"
                             value={editProfile.carNumber}
-                            onChange={(e) => {
-                                // 공백 제거
-                                let v = e.target.value.replace(/\s/g, '')
-                                // 숫자와 한글 한글자만 허용
-                                v = v.replace(/[^0-9가-힣]/g, '')
-                                // 최대 7글자 (2 + 1 + 4)
-                                v = v.slice(0, 7)
-                                onChangeField('carNumber', v)
-                            }}
-                            maxLength={7}
+                            onChange={(e) =>
+                                onChangeField('carNumber', e.target.value)
+                            }
                             className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-sm"
                             placeholder="12가3456"
                         />
