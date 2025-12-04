@@ -24,11 +24,6 @@ export function loadFavs() {
     return loadRaw()
 }
 
-// 즐겨찾기 저장
-export function saveFavs(list) {
-    saveRaw(list)
-}
-
 // 즐겨찾기 토글
 export function toggleFav(buildingId, slotId) {
     const id = makeFavId(buildingId, slotId)
@@ -45,11 +40,6 @@ export function toggleFav(buildingId, slotId) {
     return list
 }
 
-// 즐겨찾기 여부 확인
-export function isFav(buildingId, slotId) {
-    const id = makeFavId(buildingId, slotId)
-    return loadRaw().includes(id)
-}
 
 // 특정 건물 즐겨찾기만 필터
 export function getFavsByBuilding(buildingId) {
