@@ -1,2 +1,5 @@
 */.gitignore
 */.env
+*/__pycache__
+*.mp4
+*.pt

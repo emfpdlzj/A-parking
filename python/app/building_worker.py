@@ -11,18 +11,16 @@ from app.state import get_building_state, set_building_state
 from app.model_tools.yolo_car_detector import YoloCarDetector
 from app.detect import point_in_polygon
 
-
 # 영상 파일 경로 상수
 BASE_DIR = os.path.dirname(__file__)
 PALDAL_VIDEO_PATH = os.path.join(BASE_DIR, "paldal1.mp4")
 
 # YOLO 모델 전역 로드
-print("YOLO 모델 로딩 시작\n")
 yolo_detector = YoloCarDetector("yolo11n.pt")
 print("YOLO 모델 로딩 성공\n")
 
 
-def get_base_probability_by_hour(hour: int) -> float:
+def get_base_probability_by_hour(hour):
     # 시간대별 기본 점유 확률 계산
     # 00~06시  심야 시간
     # 06~09시  서서히 증가
@@ -34,14 +32,14 @@ def get_base_probability_by_hour(hour: int) -> float:
     elif 6 <= hour < 9:
         return 0.4
     elif 9 <= hour < 17:
-        return 0.75
+        return 0.95
     elif 17 <= hour < 20:
         return 0.6
     else:
         return 0.3
 
 
-def get_change_probability_by_hour(hour: int) -> float:
+def get_change_probability_by_hour(hour):
     # 시간대별 상태 변경 비율 계산
     # 심야에는 거의 안 바뀜
     # 출퇴근 시간에는 변화 빈도 증가
@@ -52,12 +50,12 @@ def get_change_probability_by_hour(hour: int) -> float:
     elif 9 <= hour < 17:
         return 0.12
     elif 17 <= hour < 20:
-        return 0.18
+        return 0.15
     else:
         return 0.07
 
 
-def get_current_probs() -> tuple[float, float]:
+def get_current_probs():
     # 현재 시각 기준으로 base_p와 change_prob 계산
     now = datetime.now()
     hour = now.hour
@@ -70,7 +68,7 @@ def get_current_probs() -> tuple[float, float]:
 async def get_paldal_cam1_real_slots(frame, roi_slots):
     # YOLO 검출 수행
     detections = yolo_detector.infer_frame(frame)
-    print(f"[paldal] YOLO detection 개수 : {len(detections)}")
+    # print(f"[paldal] YOLO detection 개수 : {len(detections)}")
 
     # 슬롯 초기 상태 설정
     slot_state = {slot["id"]: 0 for slot in roi_slots}
@@ -89,7 +87,7 @@ async def get_paldal_cam1_real_slots(frame, roi_slots):
 
 
 # paldal 카메라 2 (17~70 mock, 시간대별 혼잡도 패턴 적용)
-def make_paldal_cam2_mock_slots(old_state: dict) -> dict:
+def make_paldal_cam2_mock_slots(old_state):
     # 현재 시각 기준으로 기본 점유 확률과 변경 비율 계산
     base_p, change_prob = get_current_probs()
 
@@ -105,7 +103,6 @@ def make_paldal_cam2_mock_slots(old_state: dict) -> dict:
             # 나머지는 이전 상태 유지
             new_state[slot] = prev
 
-    print(f"[paldal cam2 mock] base_p={base_p:.2f}, change_prob={change_prob:.2f}")
     return new_state
 
 
@@ -122,7 +119,6 @@ async def process_paldal_building():
         print(f"paldal 영상 열기 실패 경로: {PALDAL_VIDEO_PATH}")
         return
 
-    tick = 0
     old_state = get_building_state("paldal")
 
     while True:
@@ -131,11 +127,7 @@ async def process_paldal_building():
             print("paldal video end")
             break
 
-        tick += 1
-
-        frame_np = np.asarray(frame)
-
-        real16 = await get_paldal_cam1_real_slots(frame_np, cam1_slots)
+        real16 = await get_paldal_cam1_real_slots(frame, cam1_slots)
         mock54 = make_paldal_cam2_mock_slots(old_state)
 
         new_state = {**real16, **mock54}
@@ -144,8 +136,6 @@ async def process_paldal_building():
         for slot_id, occ in new_state.items():
             if old_state.get(slot_id) != occ:
                 diff.append({"id": slot_id, "occupied": bool(occ)})
-
-        print(f"[paldal] tick={tick}, diff 개수={len(diff)}")
 
         if diff:
             packet = {
@@ -161,14 +151,12 @@ async def process_paldal_building():
 
 
 # 다른 건물 mock 70칸 루프 (시간대별 혼잡도 패턴 적용)
-async def process_mock_building(building: str):
+async def process_mock_building(building):
     print(f"streaming start for {building}")
 
-    tick = 0
     old_state = get_building_state(building)
 
     while True:
-        tick += 1
 
         base_p, change_prob = get_current_probs()
 
@@ -187,10 +175,6 @@ async def process_mock_building(building: str):
             if old_state.get(slot_id) != occ:
                 diff.append({"id": slot_id, "occupied": bool(occ)})
 
-        print(
-            f"[{building}] tick={tick}, base_p={base_p:.2f}, change_prob={change_prob:.2f}, diff 개수={len(diff)}"
-        )
-
         if diff:
             packet = {"buildingId": building, "results": diff}
             await redis_pub.publish_packet(building, packet)
@@ -203,7 +187,6 @@ async def process_mock_building(building: str):
 
 # 모든 건물 워커 시작
 async def start_all_building_workers():
-    print("모든 건물 스트림 시작")
     asyncio.create_task(process_paldal_building())
 
     for b in ["library", "yulgok", "yeonam"]:

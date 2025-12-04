@@ -1,8 +1,7 @@
-from typing import List, Dict, Any, Set
 import random
 
 
-def point_in_polygon(px: float, py: float, polygon: List[List[float]]) -> bool:
+def point_in_polygon(px, py, polygon):
     # 폴리곤 내부 포인트 포함 여부 판단
     inside = False
     n = len(polygon)
@@ -17,11 +16,11 @@ def point_in_polygon(px: float, py: float, polygon: List[List[float]]) -> bool:
 
 
 def map_detections_to_slots(
-    detections: List[Dict[str, Any]],
-    roi_slots: List[Dict[str, Any]],
-) -> Set[int]:
+    detections,
+    roi_slots,
+):
     # 검출 결과를 슬롯 id 집합으로 매핑
-    occupied_slots: Set[int] = set()
+    occupied_slots = set()
 
     for det in detections:
         cx = det["x"] + det["w"] / 2.0
@@ -44,12 +43,12 @@ def map_detections_to_slots(
 
 
 def make_snapshot_from_detections(
-    detections: List[Dict[str, Any]],
-    roi_slots: List[Dict[str, Any]],
-) -> Dict[int, int]:
+    detections,
+    roi_slots,
+):
     # 검출 결과와 ROI를 이용해 슬롯별 점유 상태 스냅샷 생성
     # 반환 형식: {slot_id: occupied(0 또는 1)}
-    state: Dict[int, int] = {}
+    state = {}
 
     # 모든 슬롯을 기본값 0으로 초기화
     for slot_obj in roi_slots:
@@ -69,9 +68,9 @@ def make_snapshot_from_detections(
     return state
 
 
-def make_mock_snapshot(roi_slots: List[dict]) -> Dict[int, int]:
+def make_mock_snapshot(roi_slots):
     # ROI 슬롯 리스트를 기반으로 랜덤 점유 상태 생성
-    state: Dict[int, int] = {}
+    state = {}
 
     for slot_obj in roi_slots:
         slot_id_raw = slot_obj.get("slot", slot_obj.get("id"))

@@ -23,13 +23,13 @@ class ROICache:
         if not force and building in self.memory_cache:
             return self.memory_cache[building]
 
-        # 2) 무조건 HTTP로 Express에서 새로 가져오기
+        # 2) 없다면 HTTP로 Express에서 새로 가져오기
         data = await self.fetch_from_express(building)
 
-        # 3) 메모리에만 저장
+        # 3) 메모리에 저장
         self.memory_cache[building] = data
-        print(f"Express로부터 ROI load & cache: building {building}")
 
         return data
+
 
 roi_cache = ROICache()

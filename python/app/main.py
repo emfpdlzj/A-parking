@@ -7,6 +7,7 @@ from app.building_worker import start_all_building_workers
 
 app = FastAPI()
 
+
 async def initialize_all():
     # 1) ROI 초기 캐싱
     for building in ["paldal", "library", "yulgok", "yeonam"]:

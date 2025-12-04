@@ -1,13 +1,10 @@
 import cv2
 import json
-from typing import List, Dict
 
-# 설정
 BUILDING_ID = "paldal"  # 건물 id 문자열 - paldal, library, yulgok, yeonam
 FRAME_PATH = "paldal_frame.jpg"  # ROI를 지정할 이미지 경로
 OUTPUT_PATH = "roi_paldal_cam1.json"  # 출력 roi json 경로
 
-rois: List[Dict] = []
 drawing = False
 ix, iy = -1, -1
 next_slot_id = 1
@@ -47,7 +44,7 @@ def draw_roi(event, x, y, flags, param):
         rois.append(roi_obj)
         print("ROI saved:", roi_obj)
 
-        # 이미지에 박스와 슬롯 번호 표시
+        # 이미지에 박스와 슬롯 번호 표시 - 디버깅용
         cv2.rectangle(image, (x_min, y_min), (x_max, y_max), (0, 255, 0), 1)
         cv2.putText(
             image,
@@ -67,12 +64,9 @@ image = cv2.imread(FRAME_PATH)
 if image is None:
     raise RuntimeError("이미지 열기 실패")
 
-cv2.namedWindow("ROI Selector")
-cv2.setMouseCallback("ROI Selector", draw_roi)
-
 while True:
     cv2.imshow("ROI Selector", image)
-    if cv2.waitKey(1) & 0xFF == ord("q"):  # q누르면 종료
+    if cv2.waitKey(1) & 0xFF == ord("q"):  # 입력대기 & q누르면 종료
         break
 
 cv2.destroyAllWindows()
@@ -82,7 +76,7 @@ data = {
     "slots": rois,
 }
 
-with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-    json.dump(data, f, ensure_ascii=False, indent=2)
+with open(OUTPUT_PATH, "w") as f:
+    json.dump(data, f, indent=2)  # indent =2 로 저장
 
 print("ROI JSON save", OUTPUT_PATH)
