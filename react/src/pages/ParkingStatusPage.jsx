@@ -126,7 +126,7 @@ export default function ParkingStatusPage() {
                     </div>
                 </div>
 
-                <div className="mt-4 grid grid-cols-[minmax(0,1fr)_320px] gap-6">
+                <div className="mt-4 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 lg:gap-6">
                     <section className="space-y-4">
                         {/* 상단 점유율 바 */}
                         <section className="bg-white rounded-2xl shadow-md p-4">

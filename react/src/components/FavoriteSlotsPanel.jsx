@@ -2,6 +2,7 @@ import React from 'react'
 import { getSlotStatus } from '../utils/slotStatusStorage.js'
 import starIcon from "../assets/icons/star.svg";
 import plusIcon from "../assets/icons/plusIcon.svg";
+
 function FavoriteSlotsPanel(props) {
     const { mode } = props
 
@@ -50,22 +51,22 @@ function FavoriteSlotsPanel(props) {
                         alt="star 아이콘"
                         className="w-4 h-4 object-contain"
                     />
-                    <h3 className="text-sm font-semibold text-slate-800">
+                    <h3 className="text-xs sm:text-sm font-semibold text-slate-800">
                         내 선호 자리
                     </h3>
                 </div>
                 {favoriteItems.length === 0 ? (
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs sm:text-sm text-slate-500">
                         즐겨찾기한 좌석이 없음
                     </p>
                 ) : (
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-2 text-xs sm:text-sm">
                         {favoriteItems.map((item) => (
                             <div
                                 key={item.id}
                                 className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-2 border border-slate-200"
                             >
-                                <span>
+                                <span className="truncate">
                                     {item.buildingName} {item.slot}번
                                 </span>
 
@@ -77,13 +78,13 @@ function FavoriteSlotsPanel(props) {
                                                 item.buildingId,
                                             )
                                         }
-                                        className="text-xs px-2 py-0.5 rounded-lg border border-slate-300 text-slate-600 hover:bg-[#eef2ff] transition"
+                                        className="text-[11px] sm:text-xs px-2 py-0.5 rounded-lg border border-slate-300 text-slate-600 hover:bg-[#eef2ff] transition whitespace-nowrap"
                                     >
                                         점유 여부 보러가기
                                     </button>
                                 ) : (
                                     <span
-                                        className={`text-xs px-2 py-0.5 rounded-full ${item.badgeClass}`}
+                                        className={`text-[11px] sm:text-xs px-2 py-0.5 rounded-full ${item.badgeClass}`}
                                     >
                                         {item.label}
                                     </span>
@@ -97,8 +98,8 @@ function FavoriteSlotsPanel(props) {
                     type="button"
                     onClick={() => onNavigateToBuilding(profileFavoriteBuilding)}
                     className="mt-3 w-full rounded-2xl border border-dashed border-[#cbd5f5]
-               px-4 py-3 flex items-center justify-center gap-2
-               text-sm text-slate-700 hover:bg-[#f9fafb] transition"
+               px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-center gap-2
+               text-xs sm:text-sm text-slate-700 hover:bg-[#f9fafb] transition"
                 >
                     <img
                         src={plusIcon}
@@ -123,16 +124,16 @@ function FavoriteSlotsPanel(props) {
                     alt="star 아이콘"
                     className="w-4 h-4 object-contain"
                 />
-                <h3 className="text-sm font-semibold text-slate-800">
+                <h3 className="text-xs sm:text-sm font-semibold text-slate-800">
                     내 선호 자리
                 </h3>
             </div>
             {favorites.length === 0 ? (
-                <p className="text-sm text-slate-500">
+                <p className="text-xs sm:text-sm text-slate-500">
                     즐겨찾기한 자리가 없음
                 </p>
             ) : (
-                <div className="space-y-2 text-sm">
+                <div className="space-y-2 text-xs sm:text-sm">
                     {favorites.map((slotId) => {
                         const occ = slots[slotId]
                         const isOccupied = occ === 1
@@ -142,12 +143,12 @@ function FavoriteSlotsPanel(props) {
                                 key={slotId}
                                 className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-2 border border-slate-200"
                             >
-                                <span>
+                                <span className="truncate">
                                     {buildingName} {slotId}번
                                 </span>
                                 <span
                                     className={[
-                                        'text-xs px-2 py-0.5 rounded-full',
+                                        'text-[11px] sm:text-xs px-2 py-0.5 rounded-full',
                                         isOccupied
                                             ? 'bg-[#fce8e6] text-[#c5221f]'
                                             : 'bg-[#e6f4ea] text-[#137333]',

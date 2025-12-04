@@ -1,15 +1,15 @@
 import React from 'react'
 import basicProfile from '../assets/icons/basic_profile.jpeg'
 import profileIcon from '../assets/icons/profile.png'
-import paldalImg from "../assets/buildings/paldal.svg";
-import libraryImg from "../assets/buildings/library.svg";
-import yulgokImg from "../assets/buildings/yulgok.svg";
-import yeonamImg from "../assets/buildings/yeonam.svg";
+import paldalImg from '../assets/buildings/paldal.svg'
+import libraryImg from '../assets/buildings/library.svg'
+import yulgokImg from '../assets/buildings/yulgok.svg'
+import yeonamImg from '../assets/buildings/yeonam.svg'
 
 const BUILDINGS = [
     { id: 'paldal', name: '팔달관' },
-    { id: 'library', name: '도서관'},
-    { id: 'yulgok', name: '율곡관'},
+    { id: 'library', name: '도서관' },
+    { id: 'yulgok', name: '율곡관' },
     { id: 'yeonam', name: '연암관' },
 ]
 
@@ -23,11 +23,9 @@ function ProfilePanel({
                           onCancel,
                           onChangeImage,
                           onClearImage,
-                      })
-
-{
+                      }) {
     return (
-        <div className="bg-white rounded-2xl shadow-md p-4">
+        <div className="bg-white rounded-2xl shadow-md p-3 sm:p-4">
             {/* 상단 타이틀*/}
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -36,7 +34,7 @@ function ProfilePanel({
                         alt="프로필 아이콘"
                         className="w-6 h-6 object-contain"
                     />
-                    <h3 className="text-sm font-semibold text-slate-800">
+                    <h3 className="text-xs sm:text-sm font-semibold text-slate-800">
                         내 정보
                     </h3>
                 </div>
@@ -45,16 +43,17 @@ function ProfilePanel({
                     <button
                         type="button"
                         onClick={onStartEdit}
-                        className="text-[11px] px-2 py-1 rounded-md bg-[#f3f4f6] text-slate-600 hover:bg-[#e5e7eb] transition">
+                        className="text-[10px] sm:text-[11px] px-2 py-1 rounded-md bg-[#f3f4f6] text-slate-600 hover:bg-[#e5e7eb] transition"
+                    >
                         수정
                     </button>
                 )}
             </div>
 
             {isEditing ? (
-                <div className="space-y-2 text-sm text-slate-700">
+                <div className="space-y-2 text-xs sm:text-sm text-slate-700">
                     {/* 편집 모드 */}
-                    <div className="flex items-center gap-4 mb-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-3">
                         <div className="w-12 h-12 rounded-full bg-[#e5e7eb] overflow-hidden flex items-center justify-center text-[11px] text-slate-500">
                             <img
                                 src={editProfile.profileImage || basicProfile}
@@ -67,7 +66,7 @@ function ProfilePanel({
                             <span className="text-[11px] text-slate-500">
                                 프로필 사진
                             </span>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <label className="inline-flex items-center justify-center px-3 py-1.5 rounded-md bg-[#f3f4f6] text-xs text-slate-700 cursor-pointer hover:bg-[#e5e7eb]">
                                     이미지 선택
                                     <input
@@ -95,31 +94,35 @@ function ProfilePanel({
                         </div>
                     </div>
 
-                    <div className="flex justify-between items-center gap-4">
-                        <span className="whitespace-nowrap">이름</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-4">
+                        <span className="whitespace-nowrap text-xs sm:text-sm">
+                            이름
+                        </span>
                         <input
                             type="text"
                             value={editProfile.name}
                             onChange={(e) =>
                                 onChangeField('name', e.target.value)
                             }
-                            className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-sm"
+                            className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-xs sm:text-sm"
                         />
                     </div>
-                    <div className="flex justify-between items-center gap-4">
-                        <span className="whitespace-nowrap">학번</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-4">
+                        <span className="whitespace-nowrap text-xs sm:text-sm">
+                            학번
+                        </span>
                         <input
                             type="text"
                             value={editProfile.studentId}
                             onChange={(e) =>
                                 onChangeField('studentId', e.target.value)
                             }
-                            className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-sm"
+                            className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-xs sm:text-sm"
                             placeholder="202012345"
                         />
                     </div>
-                    <div className="flex justify-between items-center gap-4">
-                        <span className="whitespace-nowrap">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-4">
+                        <span className="whitespace-nowrap text-xs sm:text-sm">
                             즐겨찾는 건물
                         </span>
                         <select
@@ -130,7 +133,7 @@ function ProfilePanel({
                                     e.target.value,
                                 )
                             }
-                            className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-sm bg-white"
+                            className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-xs sm:text-sm bg-white"
                         >
                             {[
                                 { id: 'paldal', name: '팔달관' },
@@ -144,15 +147,17 @@ function ProfilePanel({
                             ))}
                         </select>
                     </div>
-                    <div className="flex justify-between items-center gap-4">
-                        <span className="whitespace-nowrap">차량 번호</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-4">
+                        <span className="whitespace-nowrap text-xs sm:text-sm">
+                            차량 번호
+                        </span>
                         <input
                             type="text"
                             value={editProfile.carNumber}
                             onChange={(e) =>
                                 onChangeField('carNumber', e.target.value)
                             }
-                            className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-sm"
+                            className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-xs sm:text-sm"
                             placeholder="12가3456"
                         />
                     </div>
@@ -161,21 +166,21 @@ function ProfilePanel({
                         <button
                             type="button"
                             onClick={onCancel}
-                            className="px-3 py-1.5 text-xs rounded-md border border-slate-300 text-slate-600 hover:bg-[#f9fafb] transition"
+                            className="px-3 py-1.5 text-[11px] sm:text-xs rounded-md border border-slate-300 text-slate-600 hover:bg-[#f9fafb] transition"
                         >
                             취소
                         </button>
                         <button
                             type="button"
                             onClick={onSave}
-                            className="px-3 py-1.5 text-xs rounded-md bg-[#174ea6] text-white hover:bg-[#1450c8] transition"
+                            className="px-3 py-1.5 text-[11px] sm:text-xs rounded-md bg-[#174ea6] text-white hover:bg-[#1450c8] transition"
                         >
                             저장
                         </button>
                     </div>
                 </div>
             ) : (
-                <div className="space-y-1 text-sm text-slate-700">
+                <div className="space-y-1 text-xs sm:text-sm text-slate-700">
                     {/* 보기 모드 */}
                     <div className="flex items-center gap-3 mb-2">
                         <div className="w-12 h-12 rounded-full bg-[#e5e7eb] overflow-hidden flex items-center justify-center text-[11px] text-slate-500">
@@ -185,31 +190,31 @@ function ProfilePanel({
                                 className="w-full h-full object-cover"
                             />
                         </div>
-                        <div className="text-sm">
+                        <div className="text-xs sm:text-sm">
                             <div className="font-semibold text-slate-800">
                                 {profile.name}
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex justify-between">
+                    <div className="flex justify-between gap-2">
                         <span>이름</span>
-                        <span>{profile.name}</span>
+                        <span className="truncate">{profile.name}</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between gap-2">
                         <span>학번</span>
-                        <span>{profile.studentId}</span>
+                        <span className="truncate">{profile.studentId}</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between gap-2">
                         <span>차량 번호</span>
-                        <span>{profile.carNumber}</span>
+                        <span className="truncate">{profile.carNumber}</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between gap-2">
                         <span>즐겨찾는 건물</span>
-                        <span>
-                        {BUILDINGS.find(
-                            (b) => b.id === profile.favoriteBuilding,
-                        )?.name || profile.favoriteBuilding}
+                        <span className="truncate">
+                            {BUILDINGS.find(
+                                (b) => b.id === profile.favoriteBuilding,
+                            )?.name || profile.favoriteBuilding}
                         </span>
                     </div>
                 </div>

@@ -172,7 +172,7 @@ export default function ParkingLotLayout({
 
     return (
         <TransformWrapper
-            minScale={0.5}
+            minScale={0.3}
             maxScale={1.5}
             initialScale={0.7}
             // 마우스/터치 줌 막기
@@ -190,62 +190,69 @@ export default function ParkingLotLayout({
 
                 return (
                     <div className="w-full">
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
                             <h2 className="text-sm font-semibold text-slate-800">
                                 {layout.name} 주차장 배치
                             </h2>
 
-                            <div className="flex items-center gap-4 text-[11px] text-slate-600">
-                                <div className="flex items-center gap-3">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-600">
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                     <span className="flex items-center gap-1">
                                         <span
-                                            className="inline-block w-5 h-3 rounded-[3px] bg-[#dcfce7] border border-[#22c55e]"/>
-                                        주차 가능
+                                            className="inline-block w-4 h-3 rounded-[3px] bg-[#dcfce7] border border-[#22c55e]"/>
+                                        <span className="whitespace-nowrap">
+                                            주차 가능
+                                        </span>
                                     </span>
                                     <span className="flex items-center gap-1">
                                         <span
-                                            className="inline-block w-5 h-3 rounded-[3px] bg-[#fee2e2] border border-[#ef4444]"/>
-                                        점유 중
+                                            className="inline-block w-4 h-3 rounded-[3px] bg-[#fee2e2] border border-[#ef4444]"/>
+                                        <span className="whitespace-nowrap">
+                                            점유 중
+                                        </span>
                                     </span>
                                     <span className="flex items-center gap-1">
                                         <span
-                                            className="inline-block w-5 h-3 rounded-[3px] bg-[#fef9c3] border border-[#facc15]"/>
-                                        선호 자리
+                                            className="inline-block w-4 h-3 rounded-[3px] bg-[#fef9c3] border border-[#facc15]"/>
+                                        <span className="whitespace-nowrap">
+                                            선호 자리
+                                        </span>
                                     </span>
                                 </div>
-                                <span className="ml-1 text-[14px] text-slate-500 w-10 text-right">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[12px] text-slate-500 w-10 text-right">
                                         {zoomPercent}%
                                     </span>
-                                <div className="flex items-center gap-1">
-                                    <button
-                                        type="button"
-                                        onClick={() => zoomOut && zoomOut()}
-                                        className="px-2 py-1 rounded-md border border-slate-300 bg-white text-[11px] hover:bg-[#f3f4f6]"
-                                    >
-                                        -
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => zoomIn && zoomIn()}
-                                        className="px-2 py-1 rounded-md border border-slate-300 bg-white text-[11px] hover:bg-[#f3f4f6]"
-                                    >
-                                        +
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => resetTransform && resetTransform()}
-                                        className="px-2 py-1 rounded-md border border-slate-300 bg-white text-[11px] hover:bg-[#f3f4f6]"
-                                    >
-                                        초기화
-                                    </button>
-
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => zoomOut && zoomOut()}
+                                            className="px-2 py-1 rounded-md border border-slate-300 bg-white text-[11px] hover:bg-[#f3f4f6]"
+                                        >
+                                            -
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => zoomIn && zoomIn()}
+                                            className="px-2 py-1 rounded-md border border-slate-300 bg-white text-[11px] hover:bg-[#f3f4f6]"
+                                        >
+                                            +
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => resetTransform && resetTransform()}
+                                            className="px-2 py-1 rounded-md border border-slate-300 bg-white text-[11px] hover:bg-[#f3f4f6]"
+                                        >
+                                            초기화
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div
                             ref={scrollRef}
-                            className="relative w-full h-[600px] rounded-2xl border border-slate-300 bg-[#E4E9FD] bg-[#f9fafb] overflow-x-scroll overflow-y-scroll"
+                            className="relative w-full h-[380px] sm:h-[480px] lg:h-[600px] rounded-2xl border border-slate-300 bg-[#f9fafb] overflow-x-scroll overflow-y-scroll"
                             style={{
                                 scrollbarGutter: 'stable both-edges',
                             }}

@@ -1,4 +1,3 @@
-// OccupancyChartPanel.jsx
 import React, { useEffect, useState } from 'react'
 import {
     LineChart,
@@ -80,16 +79,16 @@ function OccupancyChartPanel({ buildings }) {
     }, [analysisBuilding])
 
     return (
-        <section className="bg-white rounded-2xl shadow-md p-4">
-            <div className="flex items-center justify-between mb-4">
+        <section className="bg-white rounded-2xl shadow-md p-3 sm:p-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
                 <div>
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
                         <img
                             src={chartImg}
                             alt="차트 아이콘"
                             className="w-4 h-4 object-contain"
                         />
-                        <h3 className="text-sm font-semibold text-slate-800">
+                        <h3 className="text-xs sm:text-sm font-semibold text-slate-800">
                             과거 점유율
                         </h3>
                     </div>
@@ -100,7 +99,7 @@ function OccupancyChartPanel({ buildings }) {
                     )}
                 </div>
                 <select
-                    className="border border-slate-300 rounded-md text-xs px-2 py-1 bg-white"
+                    className="border border-slate-300 rounded-md text-xs px-2 py-1 bg-white w-full sm:w-auto sm:text-xs"
                     value={analysisBuilding}
                     onChange={(e) => setAnalysisBuilding(e.target.value)}
                 >
@@ -115,8 +114,12 @@ function OccupancyChartPanel({ buildings }) {
             {analysisError ? (
                 <p className="text-xs text-red-500">{analysisError}</p>
             ) : (
-                <div className="h-64 w-full min-w-0">
-                    <ResponsiveContainer width="100%" height="100%" minWidth={10}>
+                <div className="h-56 sm:h-64 w-full min-w-0">
+                    <ResponsiveContainer
+                        width="100%"
+                        height="100%"
+                        minWidth={10}
+                    >
                         <LineChart
                             data={analysisData}
                             margin={{ left: -20 }}

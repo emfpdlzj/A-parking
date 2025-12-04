@@ -48,20 +48,20 @@ export default function LoginPage() {
             <Header />
 
             {/* 가운데 카드 */}
-            <main className="flex-1 flex items-center justify-center px-4">
+            <main className="flex-1 flex items-center justify-center px-4 py-6 sm:py-8">
                 <div className="w-full max-w-md">
-                    <section className="bg-white rounded-2xl shadow-lg px-12 py-10">
+                    <section className="bg-white rounded-2xl shadow-lg px-6 py-8 sm:px-10 sm:py-9 md:px-12 md:py-10">
                         {/* 로고 + 타이틀 영역 */}
                         <div className="flex flex-col items-center mb-8">
-                            <h1 className="text-3xl font-semibold text-[#174ea6] mb-4">
+                            <h1 className="text-2xl sm:text-3xl font-semibold text-[#174ea6] mb-4">
                                 A Parking
                             </h1>
                             <img
                                 src={parkingicon}
                                 alt="parking icon"
-                                className="w-20 h-20 mb-4"
+                                className="w-16 h-16 sm:w-20 sm:h-20 mb-4"
                             />
-                            <p className="text-sm font-semibold text-[#174ea6] tracking-wide">
+                            <p className="text-xs sm:text-sm font-semibold text-[#174ea6] tracking-wide text-center">
                                 AJOU UNIV. 주차 관리 시스템
                             </p>
                         </div>
@@ -70,7 +70,7 @@ export default function LoginPage() {
                         <form className="space-y-5" onSubmit={handleSubmit}>
                             {/* 사용자 ID */}
                             <div className="space-y-2">
-                                <label className="block text-sm text-slate-700">
+                                <label className="block text-xs sm:text-sm text-slate-700">
                                     사용자 ID
                                 </label>
                                 <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
@@ -90,7 +90,7 @@ export default function LoginPage() {
 
                             {/* 비밀번호 */}
                             <div className="space-y-2">
-                                <label className="block text-sm text-slate-700">
+                                <label className="block text-xs sm:text-sm text-slate-700">
                                     비밀번호
                                 </label>
                                 <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
