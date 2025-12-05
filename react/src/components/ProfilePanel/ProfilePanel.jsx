@@ -1,32 +1,24 @@
+// src/components/ProfilePanel/ProfilePanel.jsx
 import React from 'react'
-import basicProfile from '../assets/icons/basic_profile.jpeg'
-import profileIcon from '../assets/icons/profile.png'
-import paldalImg from '../assets/buildings/paldal.svg'
-import libraryImg from '../assets/buildings/library.svg'
-import yulgokImg from '../assets/buildings/yulgok.svg'
-import yeonamImg from '../assets/buildings/yeonam.svg'
-
-const BUILDINGS = [
-    { id: 'paldal', name: '팔달관' },
-    { id: 'library', name: '도서관' },
-    { id: 'yulgok', name: '율곡관' },
-    { id: 'yeonam', name: '연암관' },
-]
+import basicProfile from '../../assets/icons/basic_profile.jpeg'
+import profileIcon from '../../assets/icons/profile.png'
+import ProfileImageUploader from './ProfileImageUploader.jsx'
+import { BUILDINGS, getBuildingName } from './profileConstants.js'
 
 function ProfilePanel({
-                          profile,
-                          isEditing,
-                          editProfile,
-                          onStartEdit,
-                          onChangeField,
-                          onSave,
-                          onCancel,
-                          onChangeImage,
-                          onClearImage,
+                          profile, //저장된 프로필 값
+                          isEditing, //편집중인가
+                          editProfile, //편집중인 프로필 값
+                          onStartEdit, //수정버튼 클릭
+                          onChangeField, //name, studentId, favoriteBuilding 변경
+                          onSave, //저장버튼
+                          onCancel, //취소버튼
+                          onChangeImage, //이미지 변경
+                          onClearImage, //이미지 삭제
                       }) {
     return (
         <div className="bg-white rounded-2xl shadow-md p-3 sm:p-4">
-            {/* 상단 타이틀*/}
+            {/* 상단 타이틀 */}
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                     <img
@@ -51,49 +43,17 @@ function ProfilePanel({
             </div>
 
             {isEditing ? (
+                // 편집 모드
                 <div className="space-y-2 text-xs sm:text-sm text-slate-700">
-                    {/* 편집 모드 */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-3">
-                        <div className="w-12 h-12 rounded-full bg-[#e5e7eb] overflow-hidden flex items-center justify-center text-[11px] text-slate-500">
-                            <img
-                                src={editProfile.profileImage || basicProfile}
-                                alt={editProfile.name || '기본 프로필'}
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
+                    {/* 프로필 사진 업로드 영역 → 별도 컴포넌트 사용 */}
+                    <ProfileImageUploader
+                        imageSrc={editProfile.profileImage}
+                        name={editProfile.name}
+                        onChangeImage={onChangeImage}
+                        onClearImage={onClearImage}
+                    />
 
-                        <div className="flex flex-col gap-1">
-                            <span className="text-[11px] text-slate-500">
-                                프로필 사진
-                            </span>
-                            <div className="flex flex-wrap items-center gap-2">
-                                <label className="inline-flex items-center justify-center px-3 py-1.5 rounded-md bg-[#f3f4f6] text-xs text-slate-700 cursor-pointer hover:bg-[#e5e7eb]">
-                                    이미지 선택
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) =>
-                                            onChangeImage(
-                                                e.target.files?.[0],
-                                            )
-                                        }
-                                        className="hidden"
-                                    />
-                                </label>
-
-                                {editProfile.profileImage && (
-                                    <button
-                                        type="button"
-                                        onClick={onClearImage}
-                                        className="inline-flex items-center justify-center px-3 py-1.5 rounded-md bg-[#f3f4f6] text-xs text-slate-700 cursor-pointer hover:bg-[#e5e7eb]"
-                                    >
-                                        사진 삭제
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
+                    {/* 이름 */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-4">
                         <span className="whitespace-nowrap text-xs sm:text-sm">
                             이름
@@ -107,6 +67,8 @@ function ProfilePanel({
                             className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-xs sm:text-sm"
                         />
                     </div>
+
+                    {/* 학번 */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-4">
                         <span className="whitespace-nowrap text-xs sm:text-sm">
                             학번
@@ -121,6 +83,8 @@ function ProfilePanel({
                             placeholder="202012345"
                         />
                     </div>
+
+                    {/* 즐겨찾는 건물 – BUILDINGS 상수 사용 */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-4">
                         <span className="whitespace-nowrap text-xs sm:text-sm">
                             즐겨찾는 건물
@@ -135,33 +99,29 @@ function ProfilePanel({
                             }
                             className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-xs sm:text-sm bg-white"
                         >
-                            {[
-                                { id: 'paldal', name: '팔달관' },
-                                { id: 'library', name: '도서관' },
-                                { id: 'yulgok', name: '율곡관' },
-                                { id: 'yeonam', name: '연암관' },
-                            ].map((b) => (
+                            {BUILDINGS.map((b) => (
                                 <option key={b.id} value={b.id}>
                                     {b.name}
                                 </option>
                             ))}
                         </select>
                     </div>
+
+                    {/* 차량 번호 */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-4">
-                        <span className="whitespace-nowrap text-xs sm:text-sm">
+                         <span className="whitespace-nowrap text-xs sm:text-sm">
                             차량 번호
                         </span>
                         <input
                             type="text"
                             value={editProfile.carNumber}
-                            onChange={(e) =>
-                                onChangeField('carNumber', e.target.value)
-                            }
-                            className="flex-1 border border-slate-300 rounded-md px-2 py-1 text-xs sm:text-sm"
-                            placeholder="12가3456"
+                            readOnly
+                            disabled
+                            className="flex-1 border border-slate-200 bg-[#f9fafb] text-slate-500 rounded-md px-2 py-1 text-xs sm:text-sm"
                         />
                     </div>
 
+                    {/* 버튼 */}
                     <div className="mt-3 flex gap-2 justify-end">
                         <button
                             type="button"
@@ -180,8 +140,8 @@ function ProfilePanel({
                     </div>
                 </div>
             ) : (
+                // 일반 상태 (보기만)
                 <div className="space-y-1 text-xs sm:text-sm text-slate-700">
-                    {/* 보기 모드 */}
                     <div className="flex items-center gap-3 mb-2">
                         <div className="w-12 h-12 rounded-full bg-[#e5e7eb] overflow-hidden flex items-center justify-center text-[11px] text-slate-500">
                             <img
@@ -212,9 +172,7 @@ function ProfilePanel({
                     <div className="flex justify-between gap-2">
                         <span>즐겨찾는 건물</span>
                         <span className="truncate">
-                            {BUILDINGS.find(
-                                (b) => b.id === profile.favoriteBuilding,
-                            )?.name || profile.favoriteBuilding}
+                            {getBuildingName(profile.favoriteBuilding)}
                         </span>
                     </div>
                 </div>
