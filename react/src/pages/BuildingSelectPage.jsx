@@ -1,50 +1,28 @@
+// 건물선택 페이지 - 건물선택, 과거 혼잡도, 프로필, 주차요금, 선호자리
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Header from '../components/Header.jsx'
 import ParkingUsagePanel from '../components/ParkingUsagePanel.jsx'
 import FavoriteSlotsPanel from '../components/FavoriteSlotsPanel.jsx'
-import ProfilePanel from '../components/ProfilePanel.jsx'
+import ProfilePanel from '../components/ProfilePanel/ProfilePanel.jsx'
 import OccupancyChartPanel from '../components/OccupancyChartPanel.jsx'
 import { getParkingSummary } from '../api/parking.js'
 import { loadFavs } from '../utils/favStorage.js'
-
-import paldalImg from '../assets/buildings/paldal.svg'
-import libraryImg from '../assets/buildings/library.svg'
-import yulgokImg from '../assets/buildings/yulgok.svg'
-import yeonamImg from '../assets/buildings/yeonam.svg'
-
-const BUILDINGS = [
-    { id: 'paldal', name: '팔달관', image: paldalImg },
-    { id: 'library', name: '도서관', image: libraryImg },
-    { id: 'yulgok', name: '율곡관', image: yulgokImg },
-    { id: 'yeonam', name: '연암관', image: yeonamImg },
-]
+import { BUILDINGS } from '../constants/buildings.js'
+import { loadProfile, saveProfile } from '../utils/profileStorage.js'
 
 export default function BuildingSelectPage() {
-    const [summary, setSummary] = useState({})
+    const [summary, setSummary] = useState({})         // 빌딩별 요약 점유율
     const [summaryError, setSummaryError] = useState('')
+    const [favorites] = useState(() => loadFavs())    // 즐겨찾기 목록
+    const navigate = useNavigate()                    // 페이지 이동에 사용
 
-    const [favorites, setFavorites] = useState(() => loadFavs())
-    const navigate = useNavigate()
-
-    const [profile, setProfile] = useState(() => {
-        try {
-            const raw = localStorage.getItem('profile')
-            if (raw) return JSON.parse(raw)
-        } catch {
-        }
-        return {
-            name: '홍길동',
-            studentId: '202012345',
-            favoriteBuilding: 'paldal',
-            carNumber: '12가3456',
-            profileImage: null,
-        }
-    })
+    // 프로필: 공용 util 사용해서 로컬스토리지 연동
+    const [profile, setProfile] = useState(() => loadProfile())
     const [isEditingProfile, setIsEditingProfile] = useState(false)
     const [editProfile, setEditProfile] = useState(profile)
 
-    // 프로필 편집 관련
+    // 프로필 편집
     const handleStartEditProfile = () => {
         setEditProfile(profile)
         setIsEditingProfile(true)
@@ -60,15 +38,12 @@ export default function BuildingSelectPage() {
     const handleSaveProfile = () => {
         setProfile(editProfile)
         setIsEditingProfile(false)
-        try {
-            localStorage.setItem('profile', JSON.stringify(editProfile))
-        } catch {
-        }
+        saveProfile(editProfile)   // 공용 util로 저장
     }
 
     const handleCancelProfile = () => {
         setIsEditingProfile(false)
-        setEditProfile(profile)
+        setEditProfile(profile)    // 수정 중이던 내용 버림
     }
 
     const handleChangeProfileImage = (file) => {
@@ -98,20 +73,25 @@ export default function BuildingSelectPage() {
             try {
                 const data = await getParkingSummary()
                 const map = {}
+
                 data.forEach((item) => {
                     map[item.buildingId] = item
                 })
+
                 setSummary(map)
                 setSummaryError('')
-            } catch {
+            } catch (err) {
+                console.error('주차장 요약 조회 오류', err)
                 setSummaryError('주차장 요약 정보를 불러올 수 없음')
             }
         }
 
-        fetchSummary()
-        timerId = setInterval(fetchSummary, 10000)
+        fetchSummary()                     // 페이지 들어올 때 한 번 호출
+        timerId = setInterval(fetchSummary, 10000) // 10초마다 갱신
 
-        return () => clearInterval(timerId)
+        return () => {
+            if (timerId) clearInterval(timerId)
+        }
     }, [])
 
     const handleSelectBuilding = (buildingId) => {
@@ -136,18 +116,14 @@ export default function BuildingSelectPage() {
                                     {BUILDINGS.map((b) => {
                                         const info = summary[b.id]
                                         const rate = info
-                                            ? Math.round(
-                                                info.occupancy_rate * 100,
-                                            )
+                                            ? Math.round(info.occupancy_rate * 100)
                                             : 0
 
                                         return (
                                             <button
                                                 key={b.id}
                                                 type="button"
-                                                onClick={() =>
-                                                    handleSelectBuilding(b.id)
-                                                }
+                                                onClick={() => handleSelectBuilding(b.id)}
                                                 className="bg-white rounded-2xl shadow-md hover:shadow-lg transition text-left overflow-hidden w-full"
                                             >
                                                 <div className="flex flex-col sm:flex-row">
@@ -184,9 +160,7 @@ export default function BuildingSelectPage() {
                                                     <div className="h-1.5 rounded-full bg-[#e5e7eb] overflow-hidden">
                                                         <div
                                                             className="h-full bg-[#174ea6]"
-                                                            style={{
-                                                                width: `${rate}%`,
-                                                            }}
+                                                            style={{ width: `${rate}%` }}
                                                         />
                                                     </div>
                                                 </div>
@@ -211,7 +185,6 @@ export default function BuildingSelectPage() {
                                 profile={profile}
                                 isEditing={isEditingProfile}
                                 editProfile={editProfile}
-                                buildings={BUILDINGS}
                                 onStartEdit={handleStartEditProfile}
                                 onChangeField={handleChangeProfileField}
                                 onSave={handleSaveProfile}
@@ -220,19 +193,15 @@ export default function BuildingSelectPage() {
                                 onClearImage={handleClearProfileImage}
                             />
 
-                            {/* 주차 요금/상태 패널 (내부에서 API 호출) */}
-                            <ParkingUsagePanel
-                                profileCarNumber={profile.carNumber}
-                            />
+                            {/* 주차 요금/상태 패널 */}
+                            <ParkingUsagePanel profileCarNumber={profile.carNumber} />
 
                             {/* 내 선호 자리 패널 */}
                             <FavoriteSlotsPanel
                                 mode="global"
                                 favorites={favorites}
                                 buildings={BUILDINGS}
-                                profileFavoriteBuilding={
-                                    profile.favoriteBuilding
-                                }
+                                profileFavoriteBuilding={profile.favoriteBuilding}
                                 onNavigateToBuilding={(bId) =>
                                     navigate(`/parking/${bId}`)
                                 }

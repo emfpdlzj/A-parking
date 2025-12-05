@@ -1,20 +1,19 @@
-// src/components/ProfilePanel/ProfilePanel.jsx
 import React from 'react'
 import basicProfile from '../../assets/icons/basic_profile.jpeg'
 import profileIcon from '../../assets/icons/profile.png'
 import ProfileImageUploader from './ProfileImageUploader.jsx'
-import { BUILDINGS, getBuildingName } from './profileConstants.js'
+import { BUILDINGS, getBuildingName } from '../../constants/buildings.js'
 
 function ProfilePanel({
-                          profile, //저장된 프로필 값
-                          isEditing, //편집중인가
-                          editProfile, //편집중인 프로필 값
-                          onStartEdit, //수정버튼 클릭
-                          onChangeField, //name, studentId, favoriteBuilding 변경
-                          onSave, //저장버튼
-                          onCancel, //취소버튼
-                          onChangeImage, //이미지 변경
-                          onClearImage, //이미지 삭제
+                          profile,
+                          isEditing,
+                          editProfile,
+                          onStartEdit,
+                          onChangeField,
+                          onSave,
+                          onCancel,
+                          onChangeImage,
+                          onClearImage,
                       }) {
     return (
         <div className="bg-white rounded-2xl shadow-md p-3 sm:p-4">
@@ -45,7 +44,7 @@ function ProfilePanel({
             {isEditing ? (
                 // 편집 모드
                 <div className="space-y-2 text-xs sm:text-sm text-slate-700">
-                    {/* 프로필 사진 업로드 영역 → 별도 컴포넌트 사용 */}
+                    {/* 프로필 사진 업로드 */}
                     <ProfileImageUploader
                         imageSrc={editProfile.profileImage}
                         name={editProfile.name}
@@ -84,7 +83,7 @@ function ProfilePanel({
                         />
                     </div>
 
-                    {/* 즐겨찾는 건물 – BUILDINGS 상수 사용 */}
+                    {/* 즐겨찾는 건물 */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-4">
                         <span className="whitespace-nowrap text-xs sm:text-sm">
                             즐겨찾는 건물
@@ -107,9 +106,9 @@ function ProfilePanel({
                         </select>
                     </div>
 
-                    {/* 차량 번호 */}
+                    {/* 차량 번호 - DB 값이라 수정 불가 */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-4">
-                         <span className="whitespace-nowrap text-xs sm:text-sm">
+                        <span className="whitespace-nowrap text-xs sm:text-sm">
                             차량 번호
                         </span>
                         <input
@@ -140,7 +139,7 @@ function ProfilePanel({
                     </div>
                 </div>
             ) : (
-                // 일반 상태 (보기만)
+                // 보기 모드
                 <div className="space-y-1 text-xs sm:text-sm text-slate-700">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="w-12 h-12 rounded-full bg-[#e5e7eb] overflow-hidden flex items-center justify-center text-[11px] text-slate-500">
