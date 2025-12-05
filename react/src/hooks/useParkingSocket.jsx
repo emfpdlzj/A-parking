@@ -2,8 +2,8 @@
 import {useEffect, useRef, useState} from 'react'
 import {useAuth} from './useAuth'
 
-const WS_BASE = 'ws://localhost:8081'
-//const WS_BASE = 'wss://a-parking.kro.kr/ws' //배포용
+//const WS_BASE = 'ws://localhost:8081'
+const WS_BASE = 'wss://a-parking.kro.kr/ws' //배포용
 
 export function useParkingSocket(buildingId) { //웹소켓 연결해줌
     const {accessToken} = useAuth()
