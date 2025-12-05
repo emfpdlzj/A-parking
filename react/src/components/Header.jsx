@@ -16,7 +16,7 @@ function HeaderButton({ children, icon, onClick, to }) {
 
     if (to) {
         return (
-            <Link to={to} className={base}> //여기로 이동
+            <Link to={to} className={base}>
                 {icon}
                 {children}
             </Link>

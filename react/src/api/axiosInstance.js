@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-    baseURL: 'https://a-parking.kro.kr',
+    baseURL: '',
 })
 
 // 모든 요청에 Authorization 자동 추가
