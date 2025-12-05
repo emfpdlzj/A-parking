@@ -1,97 +1,32 @@
-import React, {useState, useEffect, useRef} from 'react'
-import {TransformWrapper, TransformComponent} from 'react-zoom-pan-pinch'
-
-const SLOT_WIDTH = 80
-const SLOT_HEIGHT = 50
-
-const PARKING_LAYOUTS = {
-    paldal: {
-        name: '팔달관',
-        buildingRect: {left: '5%', top: '80%', width: '70%', height: '8%'},
-        entranceRect: {left: '34%', top: '18%', width: '6.5%', height: '6%'},
-        clusters: [
-            {id: 'paldal-cctv', left: '6%', top: '18%', rows: 2, cols: 8,startId: 1},
-            {id: 'paldal-top-right', left: '42%', top: '18%', rows: 2, cols: 8,startId: 17},
-            {id: 'paldal-mid-left', left: '6%', top: '50%', rows: 2, cols: 8,startId: 33},
-            {id: 'paldal-mid-center', left: '42%', top: '50%', rows: 2, cols:8, startId: 49},
-            {id: 'paldal-mid-right', left: '72%', top: '50%', rows: 2, cols: 3, startId: 65 },
-        ],
-    },
-
-    library: {
-        name: '도서관',
-        buildingRect: {left: '6%', top: '18%', width: '8%', height: '70%'},
-        entranceRect: {left: '47%', top: '74%', width: '6.5%', height: '6%'},
-        // 위쪽 왼쪽/오른쪽, 아래쪽 왼쪽/오른쪽 - 4개 블록
-        clusters: [
-            // 위 왼쪽
-            {id: 'lib-top-left', left: '19%', top: '18%', rows: 2, cols: 8, startId:1},
-            // 위 오른쪽
-            {id: 'lib-top-right', left: '55%', top: '18%', rows: 2, cols: 8, startId:17},
-            {id: 'lib-top-right2', left: '85%', top: '18%', rows: 2, cols: 3, startId:33},
-            // 아래 왼쪽
-            {id: 'lib-bottom-left', left: '19%', top: '52%', rows: 2, cols: 8,startId:39},
-            // 아래 오른쪽
-            {id: 'lib-bottom-right', left: '55%', top: '52%', rows: 2, cols: 8, startId:55  },
-        ],
-    },
-
-    yulgok: {
-        name: '율곡관',
-        // 아래쪽 건물 바 두께 축소
-        buildingRect: {left: '10%', top: '70%', width: '40%', height: '8%'},
-        // 건물 오른쪽 끝 입구 박스 축소
-        entranceRect: {left: '52%', top: '70%', width: '6.5%', height: '6%'},
-        clusters: [
-            {id: 'yulgok-col-1', left: '10%', top: '18%', rows: 8, cols: 1, startId:1},
-            {id: 'yulgok-col-2', left: '21%', top: '18%', rows: 8, cols: 1, startId:9},
-            {id: 'yulgok-col-3', left: '26.5%', top: '18%', rows: 8, cols: 1, startId:17},
-            {id: 'yulgok-col-4', left: '37.5%', top: '18%', rows: 8, cols: 1, startId:25},
-            {id: 'yulgok-col-5', left: '43%', top: '18%', rows: 8, cols: 1, startId:33},
-            {id: 'yulgok-col-6', left: '62%', top: '18%', rows: 10, cols: 1, startId:41},
-            {id: 'yulgok-col-7', left: '73%', top: '18%', rows: 10, cols:1 , startId:51},
-            {id: 'yulgok-col-8', left: '78.5%', top: '18%', rows: 10, cols: 1, startId:61},
-        ],
-    },
-
-    yeonam: {
-        name: '연암관',
-        // 위쪽 얇은 건물 바
-        buildingRect: {left: '10%', top: '12%', width: '50%', height: '8%'},
-        // 오른쪽 아래 입구 박스 축소
-        entranceRect: {left: '76.3%', top: '71.4%', width: '6.5%', height: '6%'},
-        clusters: [
-            {id: 'yeonam-col-1', left: '10%', top: '30%', rows: 8, cols: 1, startId:1},
-            {id: 'yeonam-col-2', left: '21%', top: '30%', rows: 8, cols: 1, startId:9},
-            {id: 'yeonam-col-3', left: '26.5%', top: '30%', rows: 8, cols: 1, startId:17},
-            {id: 'yeonam-col-4', left: '37.5%', top: '30%', rows: 8, cols: 1, startId:25},
-            {id: 'yeonam-col-5', left: '43%', top: '30%', rows: 8, cols: 1, startId:33},
-            {id: 'yeonam-col-6', left: '54%', top: '30%', rows: 8, cols: 1, startId:41},
-            {id: 'yeonam-col-7', left: '59.5%', top: '30%', rows: 8   , cols: 1, startId:49},
-            {id: 'yeonam-col-8', left: '70.5%', top: '30%', rows: 8   , cols: 1, startId:57},
-            {id: 'yeonam-col-9', left: '76%', top: '30%', rows: 6   , cols: 1, startId:65},
-        ],
-    },
-
-}
+// 주차장 모습을 건물마다 다르게 렌더링 해서 보여줌
+import React, { useState, useEffect, useRef } from 'react'
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
+import {
+    SLOT_WIDTH,
+    SLOT_HEIGHT,
+    PARKING_LAYOUTS,
+} from '../constants/parkingLayouts.js'
 
 export default function ParkingLotLayout({
-                                             buildingId,
-                                             slotsMap = {},
-                                             favorites = [],
-                                             onSlotClick,
-                                             selectedSlot,
+                                             buildingId,        // 보여줄 건물 Id
+                                             slotsMap = {},     // slot별 정보. 항상 { occupied: 0 | 1 } 형태라고 가정
+                                             favorites = [],    // 즐겨찾기 번호 배열
+                                             onSlotClick,       // 슬롯 선택했을 때 콜백
+                                             selectedSlot,      // 선택된 슬롯 번호
                                          }) {
-    const currentId = buildingId || 'paldal'
-    const layout = PARKING_LAYOUTS[currentId] ?? PARKING_LAYOUTS.paldal
-    const favoriteSet = new Set(favorites)
-    const isVerticalSlot = currentId === 'paldal' || currentId === 'library'
+    const currentId = buildingId || 'paldal' // 기본 id paldal
+    const layout = PARKING_LAYOUTS[currentId] ?? PARKING_LAYOUTS.paldal // 해당 건물의 레이아웃
+    const favoriteSet = new Set(favorites) // Set으로 바꿔서 즐겨찾기 여부 O(1) 체크
+    const isVerticalSlot = currentId === 'paldal' || currentId === 'library' // 팔달, 도서관은 주차 방향 세로
+
     const cellWidth = isVerticalSlot ? SLOT_HEIGHT : SLOT_WIDTH
     const cellHeight = isVerticalSlot ? SLOT_WIDTH : SLOT_HEIGHT
 
-    const [zoomPercent, setZoomPercent] = useState(70)
-    // 스크롤바 중앙 정렬용
+    const [zoomPercent, setZoomPercent] = useState(70) // 기본 줌 70%
+
+    // 스크롤바 중앙 정렬
     const scrollRef = useRef(null)
+
     // 마운트 시 한 번, 스크롤을 가로/세로 중앙으로 이동
     useEffect(() => {
         const el = scrollRef.current
@@ -100,43 +35,49 @@ export default function ParkingLotLayout({
         el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
         el.scrollTop = (el.scrollHeight - el.clientHeight) / 2
     }, [])
+
+    // cluster는 startId에서 시작해서 rows * cols만큼 슬롯 번호를 자동 부여
     const renderCluster = (cluster) => {
         const cells = []
 
-        let currentSlotNumber = cluster.startId || 1;
+        let currentSlotNumber = cluster.startId || 1
         for (let r = 0; r < cluster.rows; r += 1) {
             for (let c = 0; c < cluster.cols; c += 1) {
                 const slotId = currentSlotNumber
                 currentSlotNumber += 1
 
-                const slot = slotsMap[slotId]
-                const occupied = !!slot?.occupied
-                const isFav = favoriteSet.has(slotId)
-                const isSelected = selectedSlot === slotId; // 선택 여부 확인
+                const slot = slotsMap[slotId] // 서버에서 준 슬롯 정보 { occupied: 0 | 1 } 가정
+                const occupied = slot?.occupied === 1 // 1이면 점유 중, 0이면 비어 있음
+                const isFav = favoriteSet.has(slotId) // 즐겨찾기인지?
+                const isSelected = selectedSlot === slotId // 선택된 슬롯인지?
 
+                // 기본: 주차 가능(초록)
                 let cls =
                     'bg-[#dcfce7] border-[#22c55e] text-[#166534]'
+
+                // 점유 중(빨강)
                 if (occupied) {
                     cls = 'bg-[#fee2e2] border-[#ef4444] text-[#b91c1c]'
                 }
+
+                // 선호 자리(노랑) - 점유 여부와 관계없이 우선 표시
                 if (isFav) {
                     cls = 'bg-[#fef9c3] border-[#facc15] text-[#854d0e]'
                 }
 
-                const selectedStyle = isSelected //선택된 경우 효과
+                // 선택된 경우 효과
+                const selectedStyle = isSelected
                     ? 'border-4 !border-blue-600 z-50 scale-110 shadow-xl font-bold'
-                    : 'hover:opacity-80';
+                    : 'hover:opacity-80'
 
                 cells.push(
                     <button
                         key={slotId}
                         type="button"
                         onClick={() => onSlotClick && onSlotClick(slotId)}
-                        className={
-                            `relative rounded-[4px] border flex items-center justify-center text-[14px]
-                                select-none transition-all duration-200 ease-in-out
-                                ${cls} ${selectedStyle}`
-                        }
+                        className={`relative rounded-[4px] border flex items-center justify-center text-[14px]
+                            select-none transition-all duration-200 ease-in-out
+                            ${cls} ${selectedStyle}`}
                         style={{
                             width: `${cellWidth}px`,
                             height: `${cellHeight}px`,
@@ -176,20 +117,21 @@ export default function ParkingLotLayout({
             maxScale={1.5}
             initialScale={0.7}
             // 마우스/터치 줌 막기
-            wheel={{disabled: true}}
-            pinch={{disabled: true}}
-            doubleClick={{disabled: true}}
-            panning={{disabled: false, velocityDisabled: true}}
+            wheel={{ disabled: true }}
+            pinch={{ disabled: true }}
+            doubleClick={{ disabled: true }}
+            panning={{ disabled: false, velocityDisabled: true }}
             onTransformed={(ref) => {
-                const scale = ref?.state?.scale ?? 1
+                const scale = ref?.state?.scale ?? 1 // 현재 scale 값을 받아서 퍼센트 갱신
                 setZoomPercent(Math.round(scale * 100))
             }}
         >
             {(utils) => {
-                const {zoomIn, zoomOut, resetTransform} = utils || {}
+                const { zoomIn, zoomOut, resetTransform } = utils || {}
 
                 return (
                     <div className="w-full">
+                        {/* 상단 제목 줌 */}
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
                             <h2 className="text-sm font-semibold text-slate-800">
                                 {layout.name} 주차장 배치
@@ -199,21 +141,24 @@ export default function ParkingLotLayout({
                                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                     <span className="flex items-center gap-1">
                                         <span
-                                            className="inline-block w-4 h-3 rounded-[3px] bg-[#dcfce7] border border-[#22c55e]"/>
+                                            className="inline-block w-4 h-3 rounded-[3px] bg-[#dcfce7] border border-[#22c55e]"
+                                        />
                                         <span className="whitespace-nowrap">
                                             주차 가능
                                         </span>
                                     </span>
                                     <span className="flex items-center gap-1">
                                         <span
-                                            className="inline-block w-4 h-3 rounded-[3px] bg-[#fee2e2] border border-[#ef4444]"/>
+                                            className="inline-block w-4 h-3 rounded-[3px] bg-[#fee2e2] border border-[#ef4444]"
+                                        />
                                         <span className="whitespace-nowrap">
                                             점유 중
                                         </span>
                                     </span>
                                     <span className="flex items-center gap-1">
                                         <span
-                                            className="inline-block w-4 h-3 rounded-[3px] bg-[#fef9c3] border border-[#facc15]"/>
+                                            className="inline-block w-4 h-3 rounded-[3px] bg-[#fef9c3] border border-[#facc15]"
+                                        />
                                         <span className="whitespace-nowrap">
                                             선호 자리
                                         </span>
@@ -250,6 +195,7 @@ export default function ParkingLotLayout({
                             </div>
                         </div>
 
+                        {/* 스크롤 + 줌 가능한 캔버스 */}
                         <div
                             ref={scrollRef}
                             className="relative w-full h-[380px] sm:h-[480px] lg:h-[600px] rounded-2xl border border-slate-300 bg-[#f9fafb] overflow-x-scroll overflow-y-scroll"
@@ -259,7 +205,7 @@ export default function ParkingLotLayout({
                         >
                             <TransformComponent>
                                 <div className="relative w-[1600px] h-[900px] bg-white rounded-xl overflow-hidden">
-                                    {/* 건물 (반투명) */}
+                                    {/* 건물 */}
                                     <div
                                         className="absolute flex items-center justify-center text-L text-white bg-[#0f4c75]/50 rounded-md"
                                         style={{
@@ -272,6 +218,7 @@ export default function ParkingLotLayout({
                                         건물
                                     </div>
 
+                                    {/* 입구 */}
                                     <div
                                         className="absolute flex items-center justify-center text-L text-white bg-[#f97316]/60 rounded-md"
                                         style={{
@@ -284,6 +231,7 @@ export default function ParkingLotLayout({
                                         입구
                                     </div>
 
+                                    {/* 실제 슬롯 */}
                                     {layout.clusters.map(renderCluster)}
                                 </div>
                             </TransformComponent>
