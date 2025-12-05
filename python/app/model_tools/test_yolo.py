@@ -1,8 +1,13 @@
-# express 연동 전 frame 1장으로 yolo 반환값 테스트 용 코드
+# express 연동 전 frame 1장으로 yolo 반환값 테스트 용 코드, 검출결과 시각화에 사용
 # 유틸메모: python test_yolo.py --image paldal_frame.jpg --show
-import argparse
+# 해당 코드는 생성형 ai 도움을 받았습니다.
 import cv2
 from yolo_car_detector import YoloCarDetector
+
+IMAGE_PATH = "paldal_frame.jpg"  # 테스트할 이미지 경로
+MODEL_PATH = "yolo11n.pt"  # YOLO 모델 경로 또는 이름
+CONF_THRESHOLD = 0.10  # confidence threshold
+SHOW_RESULT = True  # True이면 bbox 시각화 창 띄움
 
 
 def draw_boxes(frame, detections):  # 디버깅용: 검출된 bbox를 프레임 위에 그림
@@ -36,50 +41,17 @@ def draw_boxes(frame, detections):  # 디버깅용: 검출된 bbox를 프레임 
 
 
 def main():
-    # 해당 코드는 생성형 ai 도움을 받았습니다.
-    # 커맨드라인 인자 parser 설정
-    #   --image : 테스트할 이미지 경로 (필수인자)
-    #   --model : 사용할 모델 경로 또는 이름 (기본: yolo11n.pt)
-    #   --conf  : confidence threshold (기본: 0.5)
-    #   --show  : 결과 이미지 창에 띄울지 여부 (옵션 플래그)
-    parser = argparse.ArgumentParser(description="Test YOLO car detector")
-    parser.add_argument(
-        "--image",
-        type=str,
-        required=True,
-        help="Path to test image (e.g., frame.jpg)",
-    )
-    parser.add_argument(
-        "--model",
-        type=str,
-        default="yolo11n.pt",
-        help="YOLO model path or name (default: yolo11n.pt)",
-    )
-    parser.add_argument(
-        "--conf",
-        type=float,
-        default=0.10,
-        help="Confidence threshold ",
-    )
-    parser.add_argument(
-        "--show",
-        action="store_true",
-        help="Show image with drawn bounding boxes",
-    )
-
-    args = parser.parse_args()
-
     # 1) 테스트 이미지 로드
-    frame = cv2.imread(args.image)
+    frame = cv2.imread(IMAGE_PATH)
     if frame is None:
-        print(f"[ERROR] Failed to load image: {args.image}")
+        print("[ERROR] Failed to load image: {IMAGE_PATH)")
         return
 
     # 2) YoloCarDetector 초기화
-    detector = YoloCarDetector(model_path=args.model)
+    detector = YoloCarDetector(model_path=MODEL_PATH)
 
     # 3) 프레임에서 차량 bbox 검출
-    detections = detector.infer_frame(frame, conf_threshold=args.conf)
+    detections = detector.infer_frame(frame, conf_threshold=CONF_THRESHOLD)
 
     # 결과 출력
     print("Detections:")
@@ -87,7 +59,7 @@ def main():
         print(det)
 
     # 4) 옵션: 결과 이미지 시각화
-    if args.show:
+    if SHOW_RESULT:
         frame_with_boxes = draw_boxes(frame.copy(), detections)
         cv2.imshow("YOLO Car Detection", frame_with_boxes)
         cv2.waitKey(0)

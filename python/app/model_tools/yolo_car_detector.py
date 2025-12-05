@@ -1,7 +1,5 @@
 # COCO pretrained YOLO11 사용
 # FastAPI에서 frame을 넘김 -> YOLO에서 차량검출 후 좌표 리스트 반환
-from typing import Any, Dict, List
-
 import numpy as np
 from ultralytics import YOLO
 
@@ -13,15 +11,9 @@ class YoloCarDetector:
         # car_class_ids: COCO 데이터셋의 클래스 id 중 car에 해당하는 것만 추출
         self.car_class_ids = {2}
 
-    def infer_frame(
-        self,
-        frame: np.ndarray,
-        conf_threshold: float = 0.5,  # 필터링용 정확도 임계값
-    ) -> List[Dict[str, Any]]:  # 출력용 bbox 리스트
+    def infer_frame(self, frame, conf_threshold: float = 0.5):
         results = self.model(frame, verbose=False)
-
-        # 반환할 최종 bbox 리스트
-        detections: List[Dict[str, Any]] = []
+        detections = []  # 출력용 bbox 리스트
 
         if not results:
             return detections
