@@ -6,7 +6,7 @@ const api = axios.create({
 
 // 모든 요청에 Authorization 자동 추가
 api.interceptors.request.use((config) => {
-    const stored = localStorage.getItem('accessToken')
+    const stored = localStorage.getItem('accessToken') //토큰 가져오기
 
     if (stored) {
         // Bearer  형태면 그대로, 아니면 앞에 Bearer 붙이기

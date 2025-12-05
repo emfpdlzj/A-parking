@@ -5,7 +5,7 @@ import {
     SLOT_WIDTH,
     SLOT_HEIGHT,
     PARKING_LAYOUTS,
-} from '../constants/parkingLayouts.js'
+} from '../constants/parkingLayoutsConstants.js'
 
 export default function ParkingLotLayout({
                                              buildingId,        // 보여줄 건물 Id
@@ -40,44 +40,40 @@ export default function ParkingLotLayout({
     const renderCluster = (cluster) => {
         const cells = []
 
-        let currentSlotNumber = cluster.startId || 1
+        let currentSlotNumber = cluster.startId || 1;
         for (let r = 0; r < cluster.rows; r += 1) {
             for (let c = 0; c < cluster.cols; c += 1) {
                 const slotId = currentSlotNumber
                 currentSlotNumber += 1
 
-                const slot = slotsMap[slotId] // 서버에서 준 슬롯 정보 { occupied: 0 | 1 } 가정
-                const occupied = slot?.occupied === 1 // 1이면 점유 중, 0이면 비어 있음
-                const isFav = favoriteSet.has(slotId) // 즐겨찾기인지?
-                const isSelected = selectedSlot === slotId // 선택된 슬롯인지?
+                const slot = slotsMap[slotId]  // 0 또는 1
+                const occupied = !!slot?.occupied// 1이면 점유 중
+                const isFav = favoriteSet.has(slotId)// 즐겨찾기인지?
+                const isSelected = selectedSlot === slotId; // 선택된 슬롯인지?
 
-                // 기본: 주차 가능(초록)
-                let cls =
+                let cls =  // 기본: 주차 가능(초록)
                     'bg-[#dcfce7] border-[#22c55e] text-[#166534]'
-
-                // 점유 중(빨강)
-                if (occupied) {
+                if (occupied) {  // 점유 중(빨강)
                     cls = 'bg-[#fee2e2] border-[#ef4444] text-[#b91c1c]'
                 }
-
-                // 선호 자리(노랑) - 점유 여부와 관계없이 우선 표시
-                if (isFav) {
+                if (isFav) { // 선호 자리(노랑) - 점유 여부와 관계없이 우선 표시
                     cls = 'bg-[#fef9c3] border-[#facc15] text-[#854d0e]'
                 }
 
-                // 선택된 경우 효과
-                const selectedStyle = isSelected
+                const selectedStyle = isSelected //선택된 경우 효과
                     ? 'border-4 !border-blue-600 z-50 scale-110 shadow-xl font-bold'
-                    : 'hover:opacity-80'
+                    : 'hover:opacity-80';
 
                 cells.push(
                     <button
                         key={slotId}
                         type="button"
                         onClick={() => onSlotClick && onSlotClick(slotId)}
-                        className={`relative rounded-[4px] border flex items-center justify-center text-[14px]
-                            select-none transition-all duration-200 ease-in-out
-                            ${cls} ${selectedStyle}`}
+                        className={
+                            `relative rounded-[4px] border flex items-center justify-center text-[14px]
+                                select-none transition-all duration-200 ease-in-out
+                                ${cls} ${selectedStyle}`
+                        }
                         style={{
                             width: `${cellWidth}px`,
                             height: `${cellHeight}px`,
@@ -110,6 +106,7 @@ export default function ParkingLotLayout({
             </div>
         )
     }
+
 
     return (
         <TransformWrapper

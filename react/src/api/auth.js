@@ -5,5 +5,5 @@ export async function loginApi(id, password) {
     username : id,
     password : password
   })
-  return res.data
+  return res.data //로그인 응답 데이터 받아옴
 }

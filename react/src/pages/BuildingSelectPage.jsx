@@ -17,8 +17,7 @@ export default function BuildingSelectPage() {
     const [favorites] = useState(() => loadFavs())    // 즐겨찾기 목록
     const navigate = useNavigate()                    // 페이지 이동에 사용
 
-    // 프로필: 공용 util 사용해서 로컬스토리지 연동
-    const [profile, setProfile] = useState(() => loadProfile())
+    const [profile, setProfile] = useState(() => loadProfile())//profile util들
     const [isEditingProfile, setIsEditingProfile] = useState(false)
     const [editProfile, setEditProfile] = useState(profile)
 

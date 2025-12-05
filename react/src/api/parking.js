@@ -1,18 +1,12 @@
 import api from './axiosInstance'
 
-// 건물별 전체 슬롯 상태 조회
-export async function getParking(buildingId) {
-    const res = await api.get(`/api/parking-lot/${buildingId}`)
-    return res.data
-}
-
 // 건물별 혼잡도  데이터 조회
 export async function getAnalysis(buildingId) {
     const res = await api.get(`/api/parking-lot/analysis/${buildingId}`)
     return res.data
 }
 
-// 전체 건물별 요약 점유율 조회
+// BuildingSelectPage에서 전체 건물별 요약 점유율 조회
 export async function getParkingSummary() {
     const res = await api.get('/api/parkinglot/summary')
     return res.data

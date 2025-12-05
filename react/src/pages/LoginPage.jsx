@@ -8,27 +8,27 @@ import lockIcon from '../assets/icons/loginpwd.svg'
 import parkingicon from '../assets/icons/parking_blue.png'
 
 export default function LoginPage() {
-    const [id, setId] = useState('')
-    const [pw, setPw] = useState('')
+    const [id, setId] = useState('') //id관리
+    const [pw, setPw] = useState('') //pw 관리
     const [error, setError] = useState('')
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false) //loading 화면 관리
 
     const { login, isAuthenticated } = useAuth()
     const navigate = useNavigate()
 
     useEffect(() => {
-        if (isAuthenticated) {
+        if (isAuthenticated) { //이미 로그인된 상태면 로그인 페이지에서 내보내기
             navigate('/')
         }
     }, [isAuthenticated, navigate])
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => { //로그인 버튼 눌렀을 때
         e.preventDefault()
         setError('')
         setLoading(true)
 
         try {
-            const data = await loginApi(id, pw)
+            const data = await loginApi(id, pw) //login api 호출
             login(data.accessToken, data.member)
             navigate('/')
         } catch (err) {
