@@ -1,5 +1,5 @@
 import React from 'react'
-import starIcon from '../assets/icons/star.svg'
+import starIcon from '../assets/icons/Star.svg'
 import plusIcon from '../assets/icons/plusIcon.svg'
 
 //공통 UI: 카드, 타이틀
