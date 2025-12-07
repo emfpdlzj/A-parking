@@ -123,9 +123,10 @@ async def process_paldal_building():
 
     while True:
         ret, frame = cap.read()
-        if not ret:
-            print("paldal video end")
-            break
+         if not ret:
+                    print("paldal video end, restart!")
+                    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)  # 영상 처음으로
+                    continue
 
         real16 = await get_paldal_cam1_real_slots(frame, cam1_slots)
         mock54 = make_paldal_cam2_mock_slots(old_state)
