@@ -19,6 +19,12 @@ FastAPI의 차량 검출 모델(YOLO)과 Express 기반의 실시간 데이터 �
 
 ### 실행방법
 
+Mysql & Redis ( 백그라운드 실행 )
+
+```bash
+docker-compose up -d
+```
+
 React
 
 ```bash
@@ -38,7 +44,9 @@ FastAPI
 Express
 
 ```bash
-
+npm install
+cd express
+node server.js
 ```
 
 ---
