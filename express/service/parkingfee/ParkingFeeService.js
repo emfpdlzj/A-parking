@@ -46,7 +46,7 @@ export async function settleParkingFee(userName) {
     const member = await findMemberByName(userName);
     const car_number = member.car_number;
     const entryInfo = await getEntryTime(car_number);
-    if (!entryInfo || !entryInfo.entryTime) {
+    if (!entryInfo.entryTime) {
         throw new Error('입차 기록이 없습니다.');
     }
     const entryTime = moment.tz(entryInfo.entryTime, 'Asia/Seoul').toDate();

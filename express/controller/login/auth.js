@@ -2,24 +2,11 @@ import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { login } from '../../service/login/LoginService.js';
+import { verifyToken } from '../../service/login/LoginService.js';
 
 dotenv.config();
 
 const router = Router();
-
-// JWT 토큰 검증 미들웨어 , 나중에 service로 옮길 것
-export function verifyToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ message: '토큰 확인 실패' });
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ message: '토큰 유효하지 않음' });
-    req.user = user;           // 전체 user 저장
-    req.userName = user.name;  // name만 별도로 저장 가능
-    next();
-  });
-}
 
 // 로그인
 router.post('/api/auth/login', async (req, res) => {

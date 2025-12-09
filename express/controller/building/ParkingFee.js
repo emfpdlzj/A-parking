@@ -1,5 +1,5 @@
 import express from "express";
-import {verifyToken} from "../login/auth.js";
+import { verifyToken } from '../../service/login/LoginService.js';
 import { saveParkingStatus, settleParkingFee } from "../../service/parkingfee/ParkingFeeService.js";
 import { getParkingFeePreview } from "../../service/parkingfee/ParkingFeeService.js";
 

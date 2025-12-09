@@ -1,15 +1,13 @@
 import express from "express";
-import { getLatestParkingStatus } from "../../repository/redis/RedisRepository.js";
 import { getStatus } from "../../service/congestion/CongestionService.js";
+import {getBuildingParkingStatus} from "../../service/building/BuildingSelcetorService.js";
 
 const app=express();
 app.use(express.json());
 
 app.get('/api/parking-lot/:buildingId',async (req,res) => {
     const { buildingId } = req.params;
-
-    console.log(`${buildingId} 주차장 상태 요청 받음`);
-    const parkingStatus= await getLatestParkingStatus(buildingId);
+    const parkingStatus= await getBuildingParkingStatus(buildingId);
     res.json({ success: true, data: parkingStatus });
 })
 
